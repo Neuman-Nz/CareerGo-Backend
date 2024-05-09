@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-from model import db, metadata, User, Jobseeker, Employer, File, Admin, Offer
-
+from model import db, User, Jobseeker, Employer, Admin
 # Set secret key
 app.secret_key = os.environ.get('SECRET_KEY')
 
@@ -74,6 +73,16 @@ def home():
                 <li><strong>/login</strong> -:POST - User login</li>
                 <li><strong>/logout</strong> -:DELETE - User logout</li>
                 <li><strong>/check_session</strong>:GET - Check user session</li>
+                <li><strong>/jobseekers</strong>:GET - List of all jobseekers profiles</li>
+                <li><strong>/jobseekers</strong>:POST - Create a new jobseeker profile</li>
+                <li><strong>/jobseekers/int:id</strong>:GET - Get a jobseeker profile</li>
+                <li><strong>/jobseekers/int:id</strong>:PATCH - Update a jobseeker profile</li>
+                <li><strong>/jobseekers/int:id</strong>:DELETE - Delete a jobseeker profile</li>
+                <li><strong>/employers</strong>:GET - List of all employers profiles</li>
+                <li><strong>/employers</strong>:POST - Create a new employer profile</li>
+                <li><strong>/employers/int:id</strong>:GET - Get a employer profile</li>
+                <li><strong>/employers/int:id</strong>:PATCH - Update a employer profile</li>
+                <li><strong>/employers/int:id</strong>:DELETE - Delete a employer profile</li>
             </ul>
         </div>
     </body>
@@ -173,10 +182,130 @@ class UserByID(Resource):
         db.session.commit()
 
         return '', 204
+    
+class Jobseekers(Resource):
+    def get(self):
+        jobseekers = [jobseeker.to_dict() for jobseeker in Jobseeker.query.all()]
+        return make_response(jsonify(jobseekers), 200)
+
+    def post(self):
+        data = request.get_json()
+        user_id = data.get('user_id')
+        if not user_id:
+            return {'error': 'User ID is required'}, 400
+
+        # Check if the user exists
+        user = User.query.get(user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
+
+        # Create a new jobseeker
+        jobseeker = Jobseeker(
+            user_id=user_id,
+            availability=data.get('availability'),
+            job_category=data.get('job_category'),
+            salary_expectation=data.get('salary_expectation'),
+            skills=data.get('skills'),
+            qualifications=data.get('qualifications'),
+            experience=data.get('experience'),
+            github_link=data.get('github_link'),
+            linkedin_link=data.get('linkedin_link'),
+            profile_verified=data.get('profile_verified'), #Front end to send json as false
+            picture=data.get('picture')
+        )
+
+        # Add the new jobseeker to the database
+        db.session.add(jobseeker)
+        db.session.commit()
+
+        return make_response(jsonify(jobseeker.to_dict()), 201)
 
 
+class JobseekerByID(Resource):
+    def get(self, id):
+        jobseeker = Jobseeker.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(jobseeker), 200)
 
-# Add resources to the API
+    def patch(self, id):
+        jobseeker = Jobseeker.query.filter_by(id=id).first()
+        data = request.get_json()
+
+        for key, value in data.items():
+            setattr(jobseeker, key, value)
+
+        db.session.commit()
+
+        return make_response(jsonify(jobseeker.to_dict()), 200)
+
+    def delete(self, id):
+        jobseeker = Jobseeker.query.filter_by(id=id).first()
+
+        db.session.delete(jobseeker)
+        db.session.commit()
+
+        return '', 204
+
+class Employers(Resource):
+    def get(self):
+        employers = [employer.to_dict() for employer in Employer.query.all()]
+        return make_response(jsonify(employers), 200)
+
+    def post(self):
+        data = request.get_json()
+        user_id = data.get('user_id')
+        if not user_id:
+            return {'error': 'User ID is required'}, 400
+
+        # Check if the user exists
+        user = User.query.get(user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
+
+        # Create a new employer
+        employer = Employer(
+            user_id=user_id,
+            company_name=data.get('company_name'),
+            profile_verified=data.get('profile_verified'), #False from Frontend..
+            picture=data.get('picture')
+        )
+
+        # Add the new employer to the database
+        db.session.add(employer)
+        db.session.commit()
+
+        return make_response(jsonify(employer.to_dict()), 201)
+
+
+class EmployerByID(Resource):
+    def get(self, id):
+        employer = Employer.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(employer), 200)
+
+    def patch(self, id):
+        employer = Employer.query.filter_by(id=id).first()
+        data = request.get_json()
+
+        for key, value in data.items():
+            setattr(employer, key, value)
+
+        db.session.commit()
+
+        return make_response(jsonify(employer.to_dict()), 200)
+
+    def delete(self, id):
+        employer = Employer.query.filter_by(id=id).first()
+
+        db.session.delete(employer)
+        db.session.commit()
+
+        return '', 204
+
+
+# Add routes to the API
+api.add_resource(Jobseekers, '/jobseekers')
+api.add_resource(JobseekerByID, '/jobseekers/<int:id>')
+api.add_resource(Employers, '/employers')
+api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Login, '/login')
 api.add_resource(Logout, '/logout')
 api.add_resource(CheckSession, '/check_session')
