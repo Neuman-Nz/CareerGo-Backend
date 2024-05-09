@@ -91,15 +91,6 @@ if __name__ == '__main__':
                     db.session.add(file)
                     db.session.commit()
         
-        # Create offers
-        for _ in range(3):
-            offer = Offer(
-                employer_id=(randint(1, 5)),
-                job_seeker_id=(randint(1, 5)),
-                description=fake.text()
-            )
-            db.session.add(offer)
-            db.session.commit()
         
         
         

@@ -68,9 +68,9 @@ def home():
             <ul>
                 <li><strong>/users</strong> -:GET - List of all users details</li>
                 <li><strong>/users</strong> -:POST - Sign up a new user</li>
-                <li><strong>/users/<int:id></strong> -:GET - Get a user details</li>
-                <li><strong>/users/<int:id></strong> -:PATCH - Update a user details</li>
-                <li><strong>/users/<int:id></strong> -:DELETE - Delete a user</li>
+                <li><strong>/users/int:id</strong> -:GET - Get a user details</li>
+                <li><strong>/users/int:id</strong> -:PATCH - Update a user details</li>
+                <li><strong>/users/int:id</strong> -:DELETE - Delete a user</li>
                 <li><strong>/login</strong> -:POST - User login</li>
                 <li><strong>/logout</strong> -:DELETE - User logout</li>
                 <li><strong>/check_session</strong>:GET - Check user session</li>
