@@ -1,0 +1,16 @@
+# database
+*.db
+instance
+.vscode
+
+# Ignore bundler config.
+/.bundle
+
+# Virtual env metadata
+.venv
+
+# pytest cache
+.pytest_cache
+__pycache__
+
+.env
