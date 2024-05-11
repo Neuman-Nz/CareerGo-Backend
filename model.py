@@ -66,22 +66,7 @@ class User(db.Model, SerializerMixin):
         return bcrypt.check_password_hash(self._password_hash, plaintext_password)
 
 
-class Offer(db.Model):
-    __tablename__ = 'offers'
-    id = db.Column(db.Integer, primary_key=True)
-    employer_id = db.Column(db.Integer, db.ForeignKey('employers.id'), nullable=False)
-    job_seeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    accepted = db.Column(db.Boolean, default=False)
-    
-    employer = db.relationship('Employer', backref=db.backref('offers', lazy=True))
-    job_seeker = db.relationship('Jobseeker', backref=db.backref('offers', lazy=True))
-
-    def __repr__(self):
-        return f'<Offer>'
-
-
-class Jobseeker(db.Model):
+class Jobseeker(db.Model, SerializerMixin):
     __tablename__ = 'jobseekers'
 
     serialize_rules = ('-user.jobseeker',)
@@ -95,20 +80,19 @@ class Jobseeker(db.Model):
     qualifications = db.Column(db.Text, nullable=False)
     experience = db.Column(db.Text, nullable=False)
     github_link = db.Column(db.String(255))
-    linkedin_link = db.Column(db.String(255))
     profile_verified = db.Column(db.Boolean, default=False)
     picture = db.Column(db.String)
 
     # Relationships
     user = db.relationship("User", back_populates="jobseeker")
-    files = db.relationship("File", back_populates="jobseeker")
+    #files = db.relationship("File", back_populates="jobseeker")
 
 
     def __repr__(self):
-        return f'<Jobseeker >'
+        return f'<Jobseeker {self.job_category} >'
 
 
-class Employer(db.Model):
+class Employer(db.Model, SerializerMixin):
     __tablename__ = 'employers'
 
     serialize_rules = ('-user.employer',)
@@ -123,59 +107,74 @@ class Employer(db.Model):
     user = db.relationship("User", back_populates="employer")
 
     def __repr__(self):
-        return f'<Employer >'
-
-
-class File(db.Model):
-    __tablename__ = 'files'
-
-    serialize_rules = ('-jobseeker.files',)
-
-    id = db.Column(db.Integer, primary_key=True)
-    jobseeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'))
-    file_path = db.Column(db.String(255))
-    file_type = db.Column(db.String(50))
-
-    # Relationships
-    jobseeker = db.relationship("Jobseeker", back_populates="files")
-
-    def __repr__(self):
-        return f'<File >'
-
-
-class Admin(db.Model):
+        return f'<Employer {self.company_name}>'
+    
+class Admin(db.Model, SerializerMixin):
     __tablename__ = 'admins'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<Admin >'
+        return f'<Admin email: {self.email}>'
     
-class Payment(db.Model):
-    __tablename__ = 'payments'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    amount = db.Column(db.Integer, nullable=False)
-    payment_date = db.Column(db.Date, nullable=False)
-    payment_status = db.Column(db.Boolean, default=False)
-    user = db.relationship('User', backref=db.backref('payments', lazy=True))
 
-    def __repr__(self):
-        return f'<Payment>'
-class Testimonials(db.Model):
-    __tablename__ = 'testimonials'
+# class File(db.Model):
+#     __tablename__ = 'files'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    rating = db.Column(db.Integer, nullable=False)
+#     serialize_rules = ('-jobseeker.files',)
+
+#     id = db.Column(db.Integer, primary_key=True)
+#     jobseeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'))
+#     file_path = db.Column(db.String(255))
+#     file_type = db.Column(db.String(50))
+
+#     # Relationships
+#     jobseeker = db.relationship("Jobseeker", back_populates="files")
+
+#     def __repr__(self):
+#         return f'<File >'
     
-    user = db.relationship('User', backref=db.backref('testimonials', lazy=True))
-    @validates('rating')
-    def validate_rating(self, key, value):
-        """Validate that the rating is an integer between 1 and 5."""
-        if not (1 <= value <= 5):
-            raise exc.InvalidRequestError(f"Invalid rating: {value}. Rating must be an integer between 1 and 5.")
-        return value
-    def __repr__(self):
-        return f'<Testimonials>'
+# class Offer(db.Model):
+#     __tablename__ = 'offers'
+#     id = db.Column(db.Integer, primary_key=True)
+#     employer_id = db.Column(db.Integer, db.ForeignKey('employers.id'), nullable=False)
+#     job_seeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'), nullable=False)
+#     description = db.Column(db.Text, nullable=False)
+#     accepted = db.Column(db.Boolean, default=False)
+    
+#     employer = db.relationship('Employer', backref=db.backref('offers', lazy=True))
+#     job_seeker = db.relationship('Jobseeker', backref=db.backref('offers', lazy=True))
+
+#     def __repr__(self):
+#         return f'<Offer>'
+
+
+    
+# class Payment(db.Model):
+#     __tablename__ = 'payments'
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+#     amount = db.Column(db.Integer, nullable=False)
+#     payment_date = db.Column(db.Date, nullable=False)
+#     payment_status = db.Column(db.Boolean, default=False)
+#     user = db.relationship('User', backref=db.backref('payments', lazy=True))
+
+#     def __repr__(self):
+#         return f'<Payment>'
+# class Testimonials(db.Model):
+#     __tablename__ = 'testimonials'
+
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+#     description = db.Column(db.Text, nullable=False)
+#     rating = db.Column(db.Integer, nullable=False)
+    
+#     user = db.relationship('User', backref=db.backref('testimonials', lazy=True))
+#     @validates('rating')
+#     def validate_rating(self, key, value):
+#         """Validate that the rating is an integer between 1 and 5."""
+#         if not (1 <= value <= 5):
+#             raise exc.InvalidRequestError(f"Invalid rating: {value}. Rating must be an integer between 1 and 5.")
+#         return value
+#     def __repr__(self):
+#         return f'<Testimonials>'

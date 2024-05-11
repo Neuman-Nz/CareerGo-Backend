@@ -3,7 +3,7 @@ from faker import Faker
 
 # Local imports
 from config import app  # Import Flask app 
-from model import db, User, Jobseeker, Employer, File, Admin, Offer, Payment
+from model import db, User, Jobseeker, Employer, Admin
 
 if __name__ == '__main__':
     fake = Faker()
@@ -49,7 +49,6 @@ if __name__ == '__main__':
                     qualifications=' '.join(fake.words()),  # Convert list to string
                     experience=' '.join(fake.words()),  # Convert list to string
                     github_link=fake.url(),
-                    linkedin_link=fake.url(),
                     profile_verified=True if randint(0, 1) else False,
                     picture=fake.image_url()
                 )
@@ -67,32 +66,6 @@ if __name__ == '__main__':
                 db.session.add(employer)
                 db.session.commit()
 
-            # Create payments
-            if user.role == 'employer':
-                for _ in range(randint(0, 3)):
-                    payment = Payment(
-                    user_id=user.id,
-                    amount=randint(100, 1000),
-                    payment_date=fake.date_this_year(),
-                    payment_status =True if randint(0, 1) else False
-                    )
-                    db.session.add(payment)
-                    db.session.commit()
-                
-            
-            # Create files for jobseekers
-            if user.role == 'jobseeker':
-                for _ in range(randint(0, 3)):
-                    file = File(
-                        jobseeker_id=jobseeker.id,
-                        file_path=fake.file_path(),
-                        file_type=fake.file_extension()
-                    )
-                    db.session.add(file)
-                    db.session.commit()
-        
-        
-        
         
         # Create admin
         admin = Admin(email='admin@example.com')
