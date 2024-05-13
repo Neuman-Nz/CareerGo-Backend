@@ -90,19 +90,30 @@ def home():
     """
 
 # Resource classes
-class Login(Resource):
+class Login(Resource):    
     def post(self):
         data = request.get_json()
-        email = data.get('email')
+        identifier = data.get('identifier')  # This can be username, email, or phone
         password = data.get('password')
         
-        if not email or not password:
-            return {'message': 'Email and password are required'}, 400
+        if not identifier or not password:
+            return {'message': 'username/email/phone and password are required'}, 400
         
-        user = User.query.filter_by(email=email).first()
+        # Check if the input is an email address
+        is_email = '@' in identifier
+        
+        if is_email:
+            user = User.query.filter_by(email=identifier).first()
+        else:
+            # Check if the input is a phone number
+            is_phone = identifier.isdigit() and len(identifier) == 10
+            if is_phone:
+                user = User.query.filter_by(phone=identifier).first()
+            else:
+                user = User.query.filter_by(username=identifier).first()
         
         if not user:
-            return {'error': 'Email not found'}, 404
+            return {'error': 'User not found'}, 404
         
         if user.check_password(password):
             session['user_id'] = user.id
@@ -139,15 +150,21 @@ class Users(Resource):
         data = request.get_json()
 
         # Check if the email already exists
-        existing_user = User.query.filter_by(email=data['email']).first()
-        if existing_user:
-            return make_response(jsonify({'error': 'Email already exists'}), 400)
+        existing_email = User.query.filter_by(email=data['email']).first()
+        if existing_email:
+            return make_response(jsonify({'message': 'Email already exists'}), 400)
+
+        # Check if the username already exists
+        existing_username = User.query.filter_by(username=data['username']).first()
+        if existing_username:
+            return make_response(jsonify({'message': 'Username already exists'}), 400)
 
         # Create a new user
         new_user = User(
             username=data['username'],
             email=data['email'],
-            password=data['password'],  # Use password property
+            password=data['password'],
+            phone=data['phone'],
             role=data['role']
         )
 
@@ -155,7 +172,7 @@ class Users(Resource):
         db.session.add(new_user)
         db.session.commit()
 
-        return make_response(jsonify(new_user.to_dict()), 201)
+        return make_response(jsonify({'message': 'User successfully registered', 'user': new_user.to_dict()}), 201)
 
 
 
@@ -311,8 +328,7 @@ api.add_resource(Logout, '/logout')
 api.add_resource(CheckSession, '/check_session')
 api.add_resource(Users, '/users')
 api.add_resource(UserByID, '/users/<int:id>')
-# api.add_resource(JobSeekerProfile, '/jobseekers')
-api.add_resource(JobSeekerProfile, '/jobseeker/profile')
+
 
 if __name__ == '__main__':
     with app.app_context():
