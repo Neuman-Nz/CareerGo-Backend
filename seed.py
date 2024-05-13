@@ -20,6 +20,7 @@ if __name__ == '__main__':
                 username='dan',
                 email='danspmunene@gmail.com',
                 password='dan',
+                phone_number='+123-456-7890',
                 role='jobseeker' 
             )
         db.session.add(dan)
@@ -32,6 +33,7 @@ if __name__ == '__main__':
                 username=fake.user_name(),
                 email=fake.email(),
                 password=fake.password(),
+                phone_number=fake.phone_number(),
                 role='jobseeker' if randint(0, 1) else 'employer'
             )
             db.session.add(user)

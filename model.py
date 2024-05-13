@@ -24,7 +24,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
-    phone = db.Column(db.String(15), nullable=False, unique=True)
+    phone_number = db.Column(db.String(100), nullable=True)
     _password_hash = db.Column(db.String, nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
@@ -56,17 +56,17 @@ class User(db.Model, SerializerMixin):
         return email
     
     
-    @validates('phone')
-    def validate_phone(self, key, phone):
-        if not phone:
+    @validates('phone_number')
+    def validate_phone_number(self, key, phone_number):
+        if not phone_number:
             raise ValueError('Phone is required')
         
         # Check phone number format using regular expression
-        phone_pattern = r'^254\d{9}$'  # Assuming phone numbers start with 254 and are followed by 9 digits
-        if not re.match(phone_pattern, phone):
-            raise ValueError('Invalid phone number format')
+        # phone_pattern =  r'^\+?\d{1,3}-?\d{3,}-?\d{3,}-?\d{4,}$'  # Assuming phone numbers start with 254 and are followed by 9 digits
+        # if not re.match(phone_pattern, phone_number):
+        #     raise ValueError('Invalid phone number format')
 
-        return phone
+        return phone_number
     
     @hybrid_property
     def password(self):
