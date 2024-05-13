@@ -173,6 +173,70 @@ class UserByID(Resource):
         db.session.commit()
 
         return '', 204
+    
+
+ 
+
+# JobSeekerProfile resource
+class JobSeekerProfile(Resource):
+    def get(self):
+        jobseekers = [jobseeker.to_dict() for jobseeker in Jobseeker.query.all()]
+        return make_response(jsonify(jobseekers), 200)
+    def post(self):
+        data = request.json
+        job_seeker_id = data.get('id')
+        user_id = data.get('user_id')
+        availability = data.get('availability')
+        job_category = data.get('job_category')
+        salary_expectations = data.get('salary_expectations')
+        skills  = data.get('skills')
+        qualifications = data.get('qualifications')
+        experience = data.get('experience')
+        github_link = data.get('github_link')
+        linkedin_link = data.get('linkedin_link')
+        picture = data.get('picture')
+        # Checks if profile already exists
+        job_seeker_profile = JobSeekerProfile.query.get(job_seeker_id)
+        if job_seeker_profile:
+            # Update existing profile
+            job_seeker_profile.availability = availability
+            job_seeker_profile.job_category = job_category
+            job_seeker_profile.salary_expectations = salary_expectations
+            job_seeker_profile.skills = skills
+            job_seeker_profile.qualifications = qualifications
+            job_seeker_profile.experience = experience
+            job_seeker_profile.github_link = github_link
+            job_seeker_profile.linkedin_link = linkedin_link
+            job_seeker_profile.picture = picture
+        else:
+            # Create new profile
+            job_seeker_profile = JobSeekerProfile(
+                id=job_seeker_id,
+                availability = availability,
+                job_category=job_category,
+                salary_expectations=salary_expectations,
+                skills=skills,
+                qialifications=qualifications,
+                experience=experience,
+                github_link=github_link,
+                linkedin_link=linkedin_link,
+                picture=picture,
+            )
+        # Save the profile to the database
+        db.session.add(job_seeker_profile)
+        db.session.commit()
+        return jsonify({"message": "Jobseeker profile updated successfully"}), 200
+class JobseekerByID(Resource):
+    def get(self,id):
+        jobseeker = Jobseeker.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(jobseeker), 200)
+
+
+    def delete(self, id):
+        jobseeker = Jobseeker.query.get_or_404(id)
+        db.session.delete(jobseeker)
+        db.session.commit()
+        return jsonify({"message": "Jobseeker deleted successfully"})
 
 
 
@@ -182,6 +246,8 @@ api.add_resource(Logout, '/logout')
 api.add_resource(CheckSession, '/check_session')
 api.add_resource(Users, '/users')
 api.add_resource(UserByID, '/users/<int:id>')
+# api.add_resource(JobSeekerProfile, '/jobseekers')
+api.add_resource(JobSeekerProfile, '/jobseeker/profile')
 
 if __name__ == '__main__':
     with app.app_context():
