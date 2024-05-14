@@ -5,7 +5,7 @@ import phonenumbers
 
 # Local imports
 from config import app  # Import Flask app 
-from model import db, User, Jobseeker, Employer, Admin
+from model import db, User, Jobseeker, Employer, Admin, File
 
 def generate_valid_phone_number():
     kenya_country_code = '+254'
@@ -36,12 +36,12 @@ if __name__ == '__main__':
         db.create_all()
 
         dan = User(
-                username='dan',
-                email='danspmunene@gmail.com',
-                password='dan',
-                phone_number='+254706318757',
-                role='jobseeker' 
-            )
+            username='dan',
+            email='danspmunene@gmail.com',
+            password='dan',
+            phone_number='+254706318757',
+            role='jobseeker' 
+        )
         db.session.add(dan)
         db.session.commit()
         
@@ -61,20 +61,28 @@ if __name__ == '__main__':
             
             # Create jobseekers
             if user.role == 'jobseeker':
-
                 jobseeker = Jobseeker(
                     user_id=user.id,
                     availability=fake.word(),
                     job_category=fake.word(),
-                    salary_expectation = str(randint(20000, 100000)),
-                    skills=' '.join(fake.words()),  # Convert list to string
-                    qualifications=' '.join(fake.words()),  # Convert list to string
-                    experience=' '.join(fake.words()),  # Convert list to string
+                    salary_expectation=str(randint(20000, 100000)),
+                    skills=' '.join(fake.words()),
+                    qualifications=' '.join(fake.words()),
+                    experience=' '.join(fake.words()),
                     github_link=fake.url(),
-                    profile_verified=True if randint(0, 1) else False,
+                    profile_verified=bool(random.getrandbits(1)),
                     picture=fake.image_url()
                 )
                 db.session.add(jobseeker)
+                db.session.commit()
+                # Generate fake files for jobseekers
+                for _ in range(randint(1, 2)):
+                    file = File(
+                        jobseeker_id=jobseeker.id,
+                        file_path=fake.file_path(),
+                        file_name=fake.file_name()
+                    )
+                    db.session.add(file)
                 db.session.commit()
                     
             # Create employers
@@ -82,10 +90,19 @@ if __name__ == '__main__':
                 employer = Employer(
                     user_id=user.id,
                     company_name=fake.company(),
-                    profile_verified=True if randint(0, 1) else False,
+                    profile_verified=bool(random.getrandbits(1)),
                     picture=fake.image_url()
                 )
                 db.session.add(employer)
+                db.session.commit()
+                # Generate fake files for employers
+                for _ in range(randint(1, 2)):
+                    file = File(
+                        employer_id=employer.id,
+                        file_path=fake.file_path(),
+                        file_name=fake.file_name()
+                    )
+                    db.session.add(file)
                 db.session.commit()
 
         
