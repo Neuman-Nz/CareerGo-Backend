@@ -106,9 +106,9 @@ class Login(Resource):
             user = User.query.filter_by(email=identifier).first()
         else:
             # Check if the input is a phone number
-            is_phone = identifier.isdigit() and len(identifier) == 10
+            is_phone = identifier.replace('+', '').isdigit() and len(identifier) > 9
             if is_phone:
-                user = User.query.filter_by(phone=identifier).first()
+                user = User.query.filter_by(phone_number=identifier).first()
             else:
                 user = User.query.filter_by(username=identifier).first()
         
@@ -164,7 +164,7 @@ class Users(Resource):
             username=data['username'],
             email=data['email'],
             password=data['password'],
-            phone=data['phone'],
+            phone_number=data['phone_number'],
             role=data['role']
         )
 
