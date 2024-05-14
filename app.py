@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-from model import db, User, Jobseeker, Employer, Admin
+from model import db, User, Jobseeker, Employer, Admin, File
 # Set secret key
 app.secret_key = os.environ.get('SECRET_KEY')
 
@@ -83,6 +83,11 @@ def home():
                 <li><strong>/employers/int:id</strong>:GET - Get a employer profile</li>
                 <li><strong>/employers/int:id</strong>:PATCH - Update a employer profile</li>
                 <li><strong>/employers/int:id</strong>:DELETE - Delete a employer profile</li>
+                <li><strong>/files</strong>:GET - List of all files</li>
+                <li><strong>/files</strong>:POST - Add a jobseeker or employer file</li>
+                <li><strong>/files/int:id</strong>:GET - Get a jobseeker or employer file</li>
+                <li><strong>/files/int:id</strong>:PATCH - Update a jobseeker or employer file</li>
+                <li><strong>/files/int:id</strong>:DELETE - Delete a jobseeker or employer file</li>
             </ul>
         </div>
     </body>
@@ -106,9 +111,9 @@ class Login(Resource):
             user = User.query.filter_by(email=identifier).first()
         else:
             # Check if the input is a phone number
-            is_phone = identifier.isdigit() and len(identifier) == 10
+            is_phone = identifier.replace('+', '').isdigit() and len(identifier) > 9
             if is_phone:
-                user = User.query.filter_by(phone=identifier).first()
+                user = User.query.filter_by(phone_number=identifier).first()
             else:
                 user = User.query.filter_by(username=identifier).first()
         
@@ -164,7 +169,7 @@ class Users(Resource):
             username=data['username'],
             email=data['email'],
             password=data['password'],
-            phone=data['phone'],
+            phone_number=data['phone_number'],
             role=data['role']
         )
 
@@ -316,18 +321,84 @@ class EmployerByID(Resource):
         db.session.commit()
 
         return '', 204
+    
+# Add routes for the File class
+class Files(Resource):
+    def get(self):
+        files = [file.to_dict() for file in File.query.all()]
+        return make_response(jsonify(files), 200)
+
+    def post(self):
+        data = request.get_json()
+        jobseeker_id = data.get('jobseeker_id')
+        employer_id = data.get('employer_id')
+        
+        if not jobseeker_id and not employer_id:
+            return {'error': 'Either jobseeker_id or employer_id is required'}, 400
+
+        if jobseeker_id:
+            user = Jobseeker.query.get(jobseeker_id)
+            if not user:
+                return {'error': 'Jobseeker not found'}, 404
+        elif employer_id:
+            user = Employer.query.get(employer_id)
+            if not user:
+                return {'error': 'Employer not found'}, 404
+
+        # Create a new file
+        file = File(
+            jobseeker_id=jobseeker_id,
+            employer_id=employer_id,
+            file_path=data.get('file_path'),
+            file_name=data.get('file_name')
+        )
+
+        # Add the new file to the database
+        db.session.add(file)
+        db.session.commit()
+
+        return make_response(jsonify(file.to_dict()), 201)
+
+
+class FileByID(Resource):
+    def get(self, id):
+        file = File.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(file), 200)
+
+    def patch(self, id):
+        file = File.query.filter_by(id=id).first()
+        data = request.get_json()
+
+        for key, value in data.items():
+            setattr(file, key, value)
+
+        db.session.commit()
+
+        return make_response(jsonify(file.to_dict()), 200)
+
+    def delete(self, id):
+        file = File.query.filter_by(id=id).first()
+
+        db.session.delete(file)
+        db.session.commit()
+
+        return '', 204
+
+
 
 
 # Add routes to the API
-api.add_resource(Jobseekers, '/jobseekers')
-api.add_resource(JobseekerByID, '/jobseekers/<int:id>')
-api.add_resource(Employers, '/employers')
-api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Login, '/login')
 api.add_resource(Logout, '/logout')
 api.add_resource(CheckSession, '/check_session')
 api.add_resource(Users, '/users')
 api.add_resource(UserByID, '/users/<int:id>')
+api.add_resource(Jobseekers, '/jobseekers')
+api.add_resource(JobseekerByID, '/jobseekers/<int:id>')
+api.add_resource(Employers, '/employers')
+api.add_resource(EmployerByID, '/employers/<int:id>')
+api.add_resource(Files, '/files')
+api.add_resource(FileByID, '/files/<int:id>')
 
 
 if __name__ == '__main__':

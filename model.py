@@ -113,7 +113,7 @@ class Jobseeker(db.Model, SerializerMixin):
 
     # Relationships
     user = db.relationship("User", back_populates="jobseeker")
-    #files = db.relationship("File", back_populates="jobseeker")
+    files = db.relationship("File", back_populates="jobseeker")
 
 
     def __repr__(self):
@@ -133,6 +133,7 @@ class Employer(db.Model, SerializerMixin):
 
     # Relationships
     user = db.relationship("User", back_populates="employer")
+    files = db.relationship("File", back_populates="employer")
 
     def __repr__(self):
         return f'<Employer {self.company_name}>'
@@ -146,21 +147,22 @@ class Admin(db.Model, SerializerMixin):
         return f'<Admin email: {self.email}>'
     
 
-# class File(db.Model):
-#     __tablename__ = 'files'
+class File(db.Model, SerializerMixin):
+    __tablename__ = 'files'
 
-#     serialize_rules = ('-jobseeker.files',)
+    serialize_rules = ('-jobseeker', '-employer',)
 
-#     id = db.Column(db.Integer, primary_key=True)
-#     jobseeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'))
-#     file_path = db.Column(db.String(255))
-#     file_type = db.Column(db.String(50))
+    id = db.Column(db.Integer, primary_key=True)
+    jobseeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'))
+    employer_id = db.Column(db.Integer, db.ForeignKey('employers.id'))
+    file_path = db.Column(db.String(255))
+    file_name = db.Column(db.String(50))
 
-#     # Relationships
-#     jobseeker = db.relationship("Jobseeker", back_populates="files")
+    jobseeker = db.relationship("Jobseeker", back_populates="files")
+    employer = db.relationship("Employer", back_populates="files")
 
-#     def __repr__(self):
-#         return f'<File >'
+    def __repr__(self):
+        return f'<File >'
     
 # class Offer(db.Model):
 #     __tablename__ = 'offers'
