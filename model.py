@@ -78,9 +78,6 @@ class User(db.Model, SerializerMixin):
             raise ValueError('Invalid phone number format. Should be:"+254123456789"')
 
         return phone_number
-
-
-
     
     @hybrid_property
     def password(self):
@@ -101,6 +98,8 @@ class Jobseeker(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
     availability = db.Column(db.String(50))
     job_category = db.Column(db.String(50))
     salary_expectation = db.Column(db.String(50))
@@ -108,8 +107,11 @@ class Jobseeker(db.Model, SerializerMixin):
     qualifications = db.Column(db.Text, nullable=False)
     experience = db.Column(db.Text, nullable=False)
     github_link = db.Column(db.String(255))
+    linkedin_link = db.Column(db.String(255))
     profile_verified = db.Column(db.Boolean, default=False)
     picture = db.Column(db.String)
+    testimonial = db.Column(db.Text)
+    app_rating = db.Column(db.Integer)
 
     # Relationships
     user = db.relationship("User", back_populates="jobseeker")
@@ -118,6 +120,12 @@ class Jobseeker(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<Jobseeker {self.job_category} >'
+    
+    @validates('app_rating')
+    def validate_app_rating(self, key, app_rating):
+        if app_rating is not None and (app_rating < 1 or app_rating > 5):
+            raise ValueError('App rating must be between 1 and 5')
+        return app_rating
 
 
 class Employer(db.Model, SerializerMixin):
@@ -130,6 +138,8 @@ class Employer(db.Model, SerializerMixin):
     company_name = db.Column(db.String(100))
     profile_verified = db.Column(db.Boolean, default=False)
     picture = db.Column(db.String)
+    testimonial = db.Column(db.Text)
+    app_rating = db.Column(db.Integer)
 
     # Relationships
     user = db.relationship("User", back_populates="employer")
@@ -137,6 +147,12 @@ class Employer(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<Employer {self.company_name}>'
+    
+    @validates('app_rating')
+    def validate_app_rating(self, key, app_rating):
+        if app_rating is not None and (app_rating < 1 or app_rating > 5):
+            raise ValueError('App rating must be between 1 and 5')
+        return app_rating
     
 class Admin(db.Model, SerializerMixin):
     __tablename__ = 'admins'
@@ -191,20 +207,3 @@ class File(db.Model, SerializerMixin):
 
 #     def __repr__(self):
 #         return f'<Payment>'
-# class Testimonials(db.Model):
-#     __tablename__ = 'testimonials'
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-#     description = db.Column(db.Text, nullable=False)
-#     rating = db.Column(db.Integer, nullable=False)
-    
-#     user = db.relationship('User', backref=db.backref('testimonials', lazy=True))
-#     @validates('rating')
-#     def validate_rating(self, key, value):
-#         """Validate that the rating is an integer between 1 and 5."""
-#         if not (1 <= value <= 5):
-#             raise exc.InvalidRequestError(f"Invalid rating: {value}. Rating must be an integer between 1 and 5.")
-#         return value
-#     def __repr__(self):
-#         return f'<Testimonials>'

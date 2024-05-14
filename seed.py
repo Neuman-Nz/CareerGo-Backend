@@ -63,6 +63,8 @@ if __name__ == '__main__':
             if user.role == 'jobseeker':
                 jobseeker = Jobseeker(
                     user_id=user.id,
+                    first_name=fake.first_name(),
+                    last_name=fake.last_name(),
                     availability=fake.word(),
                     job_category=fake.word(),
                     salary_expectation=str(randint(20000, 100000)),
@@ -70,8 +72,11 @@ if __name__ == '__main__':
                     qualifications=' '.join(fake.words()),
                     experience=' '.join(fake.words()),
                     github_link=fake.url(),
+                    linkedin_link=fake.url(),
                     profile_verified=bool(random.getrandbits(1)),
-                    picture=fake.image_url()
+                    picture=fake.image_url(),
+                    testimonial=fake.text(),
+                    app_rating=randint(1, 5)
                 )
                 db.session.add(jobseeker)
                 db.session.commit()
@@ -91,7 +96,9 @@ if __name__ == '__main__':
                     user_id=user.id,
                     company_name=fake.company(),
                     profile_verified=bool(random.getrandbits(1)),
-                    picture=fake.image_url()
+                    picture=fake.image_url(),
+                    testimonial=fake.text(),
+                    app_rating=randint(1, 5)
                 )
                 db.session.add(employer)
                 db.session.commit()
