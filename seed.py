@@ -1,9 +1,28 @@
 from random import randint
 from faker import Faker
+import random
+import phonenumbers
 
 # Local imports
 from config import app  # Import Flask app 
 from model import db, User, Jobseeker, Employer, Admin
+
+def generate_valid_phone_number():
+    kenya_country_code = '+254'
+    while True:
+        national_number = ''.join([str(random.randint(0, 9)) for _ in range(9)])
+        phone_number = f'{kenya_country_code}{national_number}'
+        
+        # Ensure that the phone number is valid
+        try:
+            # Parse the phone number
+            parsed_number = phonenumbers.parse(phone_number, None)
+            
+            # Check if the parsed number is valid
+            if phonenumbers.is_valid_number(parsed_number):
+                return phone_number
+        except phonenumbers.phonenumberutil.NumberParseException:
+            pass
 
 if __name__ == '__main__':
     fake = Faker()
@@ -20,7 +39,7 @@ if __name__ == '__main__':
                 username='dan',
                 email='danspmunene@gmail.com',
                 password='dan',
-                phone_number='+123-456-7890',
+                phone_number='+254706318757',
                 role='jobseeker' 
             )
         db.session.add(dan)
@@ -29,11 +48,12 @@ if __name__ == '__main__':
         # Seed data
         for _ in range(10):
             # Create users
+            phone_number = generate_valid_phone_number()
             user = User(
                 username=fake.user_name(),
                 email=fake.email(),
                 password=fake.password(),
-                phone_number=fake.phone_number(),
+                phone_number=phone_number,
                 role='jobseeker' if randint(0, 1) else 'employer'
             )
             db.session.add(user)

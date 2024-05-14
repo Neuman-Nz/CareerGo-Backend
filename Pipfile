@@ -16,6 +16,7 @@ flask-restful = "*"
 python-dotenv = "*"
 gunicorn = "*"
 psycopg2-binary = "*"
+phonenumbers = "*"
 
 [dev-packages]
 

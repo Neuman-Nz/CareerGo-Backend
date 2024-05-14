@@ -6,6 +6,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_bcrypt import Bcrypt
 import re
+import phonenumbers
 
 
 # Define metadata, instantiate db
@@ -55,18 +56,31 @@ class User(db.Model, SerializerMixin):
 
         return email
     
-    
+
     @validates('phone_number')
     def validate_phone_number(self, key, phone_number):
         if not phone_number:
-            raise ValueError('Phone is required')
-        
-        # Check phone number format using regular expression
-        # phone_pattern =  r'^\+?\d{1,3}-?\d{3,}-?\d{3,}-?\d{4,}$'  # Assuming phone numbers start with 254 and are followed by 9 digits
-        # if not re.match(phone_pattern, phone_number):
-        #     raise ValueError('Invalid phone number format')
+            raise ValueError('Phone number is required')
+
+        try:
+            # Parse the phone number
+            parsed_number = phonenumbers.parse(phone_number, None)
+
+            # Get the country code from the parsed number
+            country_code = phonenumbers.region_code_for_country_code(parsed_number.country_code)
+            
+            # Re-parse the phone number with the detected country code
+            parsed_number = phonenumbers.parse(phone_number, country_code)
+
+            if not phonenumbers.is_valid_number(parsed_number):
+                raise ValueError('Invalid phone number')
+        except phonenumbers.phonenumberutil.NumberParseException:
+            raise ValueError('Invalid phone number format. Should be:"+254123456789"')
 
         return phone_number
+
+
+
     
     @hybrid_property
     def password(self):
