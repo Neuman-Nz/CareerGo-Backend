@@ -3,6 +3,12 @@ from flask import Flask, jsonify, request, make_response, session,render_templat
 from flask_restful import Resource
 import os
 from dotenv import load_dotenv
+import requests
+from requests.auth import HTTPBasicAuth
+import json
+from credentials import MpesaAccessToken, LipanaMpesaPpassword
+
+    
 
 # Load environment variables from .env file
 load_dotenv()
@@ -88,6 +94,7 @@ def home():
                 <li><strong>/files/int:id</strong>:GET - Get a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:PATCH - Update a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:DELETE - Delete a jobseeker or employer file</li>
+                <li><strong>/lipa_na_mpesa</strong>:POST- send lipa na mpesa pin prompt </li>
             </ul>
         </div>
     </body>
@@ -383,6 +390,50 @@ class FileByID(Resource):
         db.session.commit()
 
         return '', 204
+    
+# mpesa stk push 
+
+class LipaNaMpesa(Resource):
+    def post(self):
+        # Check if user is logged in
+        # if 'user_id' not in session:
+        #     return {'error': 'Unauthorized access'}, 401
+        
+        access_token = MpesaAccessToken.validated_mpesa_access_token
+        api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+        headers = {"Authorization": "Bearer %s" % access_token}
+        
+    
+        # Retrieve user details
+        # user = User.query.get(user.id)
+        
+
+        # Retrieve user's phone number
+        # phone_number = user.phone_number
+        # phone_number = request.form.get("phone_no")
+        
+        
+        request_data = {
+            "BusinessShortCode": LipanaMpesaPpassword.Business_short_code,
+            "Password": LipanaMpesaPpassword.decode_password,
+            "Timestamp": LipanaMpesaPpassword.lipa_time,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": 1000,
+            # use phone_no when fetched 
+            "PartyA":'254720388005',
+            "PartyB": LipanaMpesaPpassword.Business_short_code,
+            # use phone_no when fetched 
+            "PhoneNumber": '254720388005',
+            "CallBackURL": "https://sandbox.safaricom.co.ke/mpesa/",
+            "AccountReference": "CareerGo",
+            "TransactionDesc": "Testing stk push"
+        }
+
+        response = requests.post(api_url, json=request_data, headers=headers)
+        if response.status_code == 200:
+            return {'message': 'STK push initiated successfully'}, 200
+        else:
+            return {'error': 'Failed to initiate STK push'}, 500
 
 
 
@@ -399,7 +450,7 @@ api.add_resource(Employers, '/employers')
 api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
-
+api.add_resource(LipaNaMpesa, '/lipa_na_mpesa')
 
 if __name__ == '__main__':
     with app.app_context():
