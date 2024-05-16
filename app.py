@@ -448,7 +448,7 @@ class LipaNaMpesa(Resource):
         # response_data = response.json()
         try:
             response_data = response.json()
-        except JSONDecodeError as e:
+        except json.JSONDecodeError as e:
     # Handle the JSONDecodeError, for example:
             print("Error decoding JSON:", e)
     # Assign a default value to response_data
