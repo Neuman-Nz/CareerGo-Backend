@@ -394,7 +394,7 @@ class FileByID(Resource):
 # mpesa stk push 
 
 class LipaNaMpesa(Resource):
-    def post(self):
+    def get(self,id):
         # Check if user is logged in
         # if 'user_id' not in session:
         #     return {'error': 'Unauthorized access'}, 401
@@ -405,11 +405,14 @@ class LipaNaMpesa(Resource):
         
     
         # Retrieve user details
-        # user = User.query.get(user.id)
+        user = User.query.filter_by(id=id).first()
         
 
         # Retrieve user's phone number
-        # phone_number = user.phone_number
+        phone_number = user.phone_number
+        # Remove the '+' character
+        cleaned_phone_number = phone_number.replace("+", "")
+        # the below line of code fetched the number from frontend after submisiion of form
         # phone_number = request.form.get("phone_no")
         
         
@@ -420,16 +423,18 @@ class LipaNaMpesa(Resource):
             "TransactionType": "CustomerPayBillOnline",
             "Amount": 1000,
             # use phone_no when fetched 
-            "PartyA":'254720388005',
+            "PartyA":cleaned_phone_number,
             "PartyB": LipanaMpesaPpassword.Business_short_code,
             # use phone_no when fetched 
-            "PhoneNumber": '254720388005',
+            "PhoneNumber": cleaned_phone_number,
             "CallBackURL": "https://sandbox.safaricom.co.ke/mpesa/",
             "AccountReference": "CareerGo",
             "TransactionDesc": "Testing stk push"
         }
 
         response = requests.post(api_url, json=request_data, headers=headers)
+        
+        
         if response.status_code == 200:
             return {'message': 'STK push initiated successfully'}, 200
         else:
@@ -450,7 +455,7 @@ api.add_resource(Employers, '/employers')
 api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
-api.add_resource(LipaNaMpesa, '/lipa_na_mpesa')
+api.add_resource(LipaNaMpesa, '/users/<int:id>/lipa_na_mpesa')
 
 if __name__ == '__main__':
     with app.app_context():
