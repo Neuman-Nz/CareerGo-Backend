@@ -392,9 +392,21 @@ class FileByID(Resource):
         return '', 204
     
 # mpesa stk push 
+# mpesa stk push test
+@app.route('/get_access_token', methods=['GET'])
+def get_access_token():
+    consumer_key = 'F7tjViaANDkuMTjWhVlyzCvGUD2xve2Flx85gWh0lVuluG0x'
+    consumer_secret = 'hlaRbD0OzTn4MSgSa0dRwCGDkV9sTOt4MAv234adC6KwBHIAfMHkE8ZyZH6c36AM'
+    api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+
+    r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+    mpesa_access_token = json.loads(r.text)
+    validated_mpesa_access_token = mpesa_access_token['access_token']
+
+    return validated_mpesa_access_token
 
 class LipaNaMpesa(Resource):
-    def get(self,id):
+    def post(self,id):
         # Check if user is logged in
         # if 'user_id' not in session:
         #     return {'error': 'Unauthorized access'}, 401
@@ -421,7 +433,7 @@ class LipaNaMpesa(Resource):
             "Password": LipanaMpesaPpassword.decode_password,
             "Timestamp": LipanaMpesaPpassword.lipa_time,
             "TransactionType": "CustomerPayBillOnline",
-            "Amount": 1000,
+            "Amount": 1,
             # use phone_no when fetched 
             "PartyA":cleaned_phone_number,
             "PartyB": LipanaMpesaPpassword.Business_short_code,
@@ -433,12 +445,55 @@ class LipaNaMpesa(Resource):
         }
 
         response = requests.post(api_url, json=request_data, headers=headers)
+        response_data = response.json()
         
+        return response_data
         
-        if response.status_code == 200:
-            return {'message': 'STK push initiated successfully'}, 200
-        else:
-            return {'error': 'Failed to initiate STK push'}, 500
+# mpesa stk push test
+# @app.route('/get_access_token', methods=['GET'])
+# def get_access_token():
+#     consumer_key = 'F7tjViaANDkuMTjWhVlyzCvGUD2xve2Flx85gWh0lVuluG0x'
+#     consumer_secret = 'hlaRbD0OzTn4MSgSa0dRwCGDkV9sTOt4MAv234adC6KwBHIAfMHkE8ZyZH6c36AM'
+#     api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+
+#     r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+#     mpesa_access_token = json.loads(r.text)
+#     validated_mpesa_access_token = mpesa_access_token['access_token']
+
+#     return validated_mpesa_access_token
+
+# @app.route('/lipa_na_mpesa_online', methods=['POST'])
+# def lipa_na_mpesa_online():
+#     access_token = MpesaAccessToken.validated_mpesa_access_token
+#     api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+#     headers = {"Authorization": "Bearer %s" % access_token}
+#      # Retrieve user details
+#     user = User.query.filter_by(id=id).first()
+        
+
+#          # Retrieve user's phone number
+#     phone_number = user.phone_number
+#    # Remove the '+' character
+#     cleaned_phone_number = phone_number.replace("+", "")
+    
+    
+#     request_data = {
+#         "BusinessShortCode": LipanaMpesaPpassword.Business_short_code,
+#         "Password": LipanaMpesaPpassword.decode_password,
+#         "Timestamp": LipanaMpesaPpassword.lipa_time,
+#         "TransactionType": "CustomerPayBillOnline",
+#         "Amount": 1,
+#         "PartyA": cleaned_phone_number,
+#         "PartyB": LipanaMpesaPpassword.Business_short_code,
+#         "PhoneNumber": cleaned_phone_number,
+#         "CallBackURL": "https://sandbox.safaricom.co.ke/mpesa/",
+#         "AccountReference": "CareerGo",
+#         "TransactionDesc": "Testing stk push"
+#     }
+
+#     response = requests.post(api_url, json=request_data, headers=headers)
+#     return 'success'
+
 
 
 
@@ -455,7 +510,7 @@ api.add_resource(Employers, '/employers')
 api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
-api.add_resource(LipaNaMpesa, '/users/<int:id>/lipa_na_mpesa')
+api.add_resource(LipaNaMpesa, '/users/<int:id>/lipa_na_mpesa_online')
 
 if __name__ == '__main__':
     with app.app_context():
