@@ -393,6 +393,8 @@ class FileByID(Resource):
     
 # mpesa stk push 
 
+
+
 @app.route('/get_access_token', methods=['GET'])
 def get_access_token():
     consumer_key = 'F7tjViaANDkuMTjWhVlyzCvGUD2xve2Flx85gWh0lVuluG0x'
@@ -400,11 +402,30 @@ def get_access_token():
     api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
     r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
-    mpesa_access_token = json.loads(r.text)
     
-    validated_mpesa_access_token = mpesa_access_token['access_token']
+    try:
+        # Print the response text to diagnose
+        print("Response Text:", r.text)
+        
+        # Attempt to parse the response as JSON
+        mpesa_access_token = json.loads(r.text)
+        validated_mpesa_access_token = mpesa_access_token['access_token']
+        return jsonify({'access_token': validated_mpesa_access_token}), 200
 
-    return validated_mpesa_access_token
+    except json.JSONDecodeError as e:
+        print("JSONDecodeError:", e)
+        return jsonify({'error': 'Failed to decode JSON response'}), 500
+
+    except KeyError as e:
+        print("KeyError:", e)
+        return jsonify({'error': 'Access token not found in the response'}), 500
+
+    except Exception as e:
+        print("Exception:", e)
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+
 
 class LipaNaMpesa(Resource):
     def get(self,id):
