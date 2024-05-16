@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-from credentials import MpesaAccessToken, LipanaMpesaPpassword
+from credentials import  LipanaMpesaPpassword
 
     
 
@@ -412,7 +412,7 @@ class LipaNaMpesa(Resource):
         # if 'user_id' not in session:
         #     return {'error': 'Unauthorized access'}, 401
         
-        access_token = MpesaAccessToken.validated_mpesa_access_token
+        access_token = get_access_token()
         stk_push_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
         headers = {"Authorization": f"Bearer {access_token}",
                     "Content-Type": "application/json"}
