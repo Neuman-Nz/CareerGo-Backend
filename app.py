@@ -94,7 +94,7 @@ def home():
                 <li><strong>/files/int:id</strong>:GET - Get a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:PATCH - Update a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:DELETE - Delete a jobseeker or employer file</li>
-                <li><strong>/lipa_na_mpesa</strong>:POST- send lipa na mpesa pin prompt </li>
+                <li><strong>/users/<int:id>/lipa_na_mpesa</strong>:GET- send lipa na mpesa pin prompt </li>
             </ul>
         </div>
     </body>
