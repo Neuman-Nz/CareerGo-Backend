@@ -435,7 +435,7 @@ class LipaNaMpesa(Resource):
         
         access_token = get_access_token()
         stk_push_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
-        headers = {"Authorization": f"Bearer {access_token}",
+        headers = {"Authorization": 'Bearer sAj7I0X141jNvdp1CUDnG7zRRiMz',
                     "Content-Type": "application/json"}
         
     
