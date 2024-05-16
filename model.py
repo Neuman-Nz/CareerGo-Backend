@@ -158,6 +158,20 @@ class Admin(db.Model, SerializerMixin):
     __tablename__ = 'admins'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
+    _password_hash = db.Column(db.String, nullable=False)
+
+
+    @hybrid_property
+    def password(self):
+        return self._password_hash
+
+    @password.setter
+    def password(self, plaintext_password):
+        self._password_hash = bcrypt.generate_password_hash(plaintext_password).decode('utf-8')
+
+    def check_password(self, plaintext_password):
+        return bcrypt.check_password_hash(self._password_hash, plaintext_password)
+
 
     def __repr__(self):
         return f'<Admin email: {self.email}>'

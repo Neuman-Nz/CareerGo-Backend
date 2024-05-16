@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
         
         # Create admin
-        admin = Admin(email='admin@example.com')
+        admin = Admin(email='admin@gmail.com', password='admin')
         db.session.add(admin)
         db.session.commit()
 

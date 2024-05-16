@@ -94,7 +94,6 @@ def home():
                 <li><strong>/files/int:id</strong>:GET - Get a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:PATCH - Update a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:DELETE - Delete a jobseeker or employer file</li>
-                <li><strong>/users/<int:id>/lipa_na_mpesa</strong>:GET- send lipa na mpesa pin prompt </li>
             </ul>
         </div>
     </body>
@@ -102,6 +101,41 @@ def home():
     """
 
 # Resource classes
+
+class AdminLogin(Resource):
+    def post(self):
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return {'message': 'email and password are required'}, 400
+
+        # Implement logic to validate admin credentials using email
+        admin = self.validate_admin(email, password)
+
+        if not admin:
+            return {'error': 'Unauthorized user'}, 401
+
+        session['admin_id'] = admin.id  
+        return admin.to_dict(), 200 
+
+    def validate_admin(self, email, password):
+
+        admin = Admin.query.filter_by(email=email).first()
+        if admin and admin.check_password(password):
+            return admin  
+        return None
+    
+class AdminLogout(Resource):
+    def delete(self):
+        if 'admin_id' in session:
+            session.pop('admin_id')
+            return '', 204
+        else:
+            return {'message': 'Not logged in as admin'}, 401
+        
+
 class Login(Resource):    
     def post(self):
         data = request.get_json()
@@ -391,6 +425,7 @@ class FileByID(Resource):
 
         return '', 204
     
+
 # # mpesa stk push 
 
 # class LipaNaMpesa(Resource):
@@ -444,6 +479,8 @@ class FileByID(Resource):
 
 
 # Add routes to the API
+api.add_resource(AdminLogin, '/admin_login')
+api.add_resource(AdminLogout, '/admin_logout')
 api.add_resource(Login, '/login')
 api.add_resource(Logout, '/logout')
 api.add_resource(CheckSession, '/check_session')
