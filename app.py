@@ -445,7 +445,15 @@ class LipaNaMpesa(Resource):
         }
 
         response = requests.post(api_url, json=request_data, headers=headers)
-        response_data = response.json()
+        # response_data = response.json()
+        try:
+            response_data = response.json()
+        except JSONDecodeError as e:
+    # Handle the JSONDecodeError, for example:
+            print("Error decoding JSON:", e)
+    # Assign a default value to response_data
+            response_data = {}
+
         
         return response_data
         
