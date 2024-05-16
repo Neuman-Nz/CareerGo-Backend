@@ -392,7 +392,7 @@ class FileByID(Resource):
         return '', 204
     
 # mpesa stk push 
-# mpesa stk push test
+
 @app.route('/get_access_token', methods=['GET'])
 def get_access_token():
     consumer_key = 'F7tjViaANDkuMTjWhVlyzCvGUD2xve2Flx85gWh0lVuluG0x'
@@ -401,19 +401,21 @@ def get_access_token():
 
     r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
     mpesa_access_token = json.loads(r.text)
+    
     validated_mpesa_access_token = mpesa_access_token['access_token']
 
     return validated_mpesa_access_token
 
 class LipaNaMpesa(Resource):
-    def post(self,id):
+    def get(self,id):
         # Check if user is logged in
         # if 'user_id' not in session:
         #     return {'error': 'Unauthorized access'}, 401
         
         access_token = MpesaAccessToken.validated_mpesa_access_token
-        api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
-        headers = {"Authorization": "Bearer %s" % access_token}
+        stk_push_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+        headers = {"Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json"}
         
     
         # Retrieve user details
@@ -444,17 +446,9 @@ class LipaNaMpesa(Resource):
             "TransactionDesc": "Testing stk push"
         }
 
-        response = requests.post(api_url, json=request_data, headers=headers)
-        # response_data = response.json()
-        try:
-            response_data = response.json()
-        except json.JSONDecodeError as e:
-    # Handle the JSONDecodeError, for example:
-            print("Error decoding JSON:", e)
-    # Assign a default value to response_data
-            response_data = {}
-
-        
+        response = requests.post(stk_push_url, json=request_data, headers=headers)
+        response_data = response.json()
+            
         return response_data
         
 # mpesa stk push test

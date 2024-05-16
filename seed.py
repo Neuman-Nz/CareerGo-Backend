@@ -39,7 +39,7 @@ if __name__ == '__main__':
             username='dan',
             email='danspmunene@gmail.com',
             password='dan',
-            phone_number='+254706318757',
+            phone_number='+254710293946',
             role='jobseeker' 
         )
         db.session.add(dan)
