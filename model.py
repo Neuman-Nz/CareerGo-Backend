@@ -30,8 +30,8 @@ class User(db.Model, SerializerMixin):
     role = db.Column(db.String(20), nullable=False)
 
     # Define relationship
-    jobseeker = db.relationship("Jobseeker", back_populates="user")
-    employer = db.relationship("Employer", back_populates="user")
+    jobseeker = db.relationship("Jobseeker", back_populates="user", cascade="all, delete")
+    employer = db.relationship("Employer", back_populates="user", cascade="all, delete")
 
     def __repr__(self):
         return f'<User {self.username} | Email: {self.email}>'
@@ -114,10 +114,11 @@ class Jobseeker(db.Model, SerializerMixin):
     app_rating = db.Column(db.Integer)
 
     # Relationships
-    user = db.relationship("User", back_populates="jobseeker")
-    files = db.relationship("File", back_populates="jobseeker")
-    payments = db.relationship("Payment", back_populates="jobseeker")
-    offers = db.relationship("Offer", back_populates="jobseeker")
+    user = db.relationship("User", back_populates="jobseeker", cascade="all, delete")
+    files = db.relationship("File", back_populates="jobseeker", cascade="all, delete")
+    payments = db.relationship("Payment", back_populates="jobseeker", cascade="all, delete")
+    offers = db.relationship("Offer", back_populates="jobseeker", cascade="all, delete")
+
 
 
 
@@ -146,10 +147,10 @@ class Employer(db.Model, SerializerMixin):
     app_rating = db.Column(db.Integer)
 
     # Relationships
-    user = db.relationship("User", back_populates="employer")
-    files = db.relationship("File", back_populates="employer")
-    payments = db.relationship("Payment", back_populates="employer")
-    offers = db.relationship("Offer", back_populates="employer")
+    user = db.relationship("User", back_populates="employer", cascade="all, delete")
+    files = db.relationship("File", back_populates="employer", cascade="all, delete")
+    payments = db.relationship("Payment", back_populates="employer", cascade="all, delete")
+    offers = db.relationship("Offer", back_populates="employer", cascade="all, delete")
 
     def __repr__(self):
         return f'<Employer {self.company_name}>'
