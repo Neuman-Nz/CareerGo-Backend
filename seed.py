@@ -44,10 +44,16 @@ if __name__ == '__main__':
         "https://images.unsplash.com/photo-1523673671576-35ff54e94bae?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     ]
 
-    file_names = ["Curriculum Vitae",
+    jobseeker_file_names = ["Curriculum Vitae",
                   "Resume",
                   "Personal Website",
                   "PortFolio"
+    ]
+
+    employer_file_names = ["Business License",
+                  "Tax Documents",
+                  "Business Proposal",
+                  "Contracts"
     ]
 
     availabilities = [
@@ -136,8 +142,8 @@ if __name__ == '__main__':
                 for _ in range(randint(1, 2)):
                     file = File(
                         jobseeker_id=jobseeker.id,
-                        file_path=fake.file_path(),
-                        file_name=fake.file_name()
+                        file_path="https://www.canva.com/design/DAF1oaO_juM/AJbTRI-L0jjnDeZYzFqmig/view?utm_content=DAF1oaO_juM&utm_campaign=designshare&utm_medium=link&utm_source=viewer",
+                        file_name=random.choice(jobseeker_file_names)
                     )
                     db.session.add(file)
                 db.session.commit()
@@ -158,8 +164,8 @@ if __name__ == '__main__':
                 for _ in range(randint(1, 2)):
                     file = File(
                         employer_id=employer.id,
-                        file_path=fake.file_path(),
-                        file_name=random.choice(file_names)
+                        file_path="https://www.canva.com/design/DAF1oaO_juM/AJbTRI-L0jjnDeZYzFqmig/view?utm_content=DAF1oaO_juM&utm_campaign=designshare&utm_medium=link&utm_source=viewer",
+                        file_name=random.choice(employer_file_names)
                     )
                     db.session.add(file)
                 db.session.commit()
