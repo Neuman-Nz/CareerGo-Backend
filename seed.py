@@ -27,6 +27,20 @@ def generate_valid_phone_number():
 if __name__ == '__main__':
     fake = Faker()
     
+    # List of picture URLs
+    picture_urls = [
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1577975882846-431adc8c2009?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1538330627166-33d1908c210d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1491233670471-398d873b5406?q=80&w=1473&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1588376483402-acc965d4ac21?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1500517484800-e4676bd66290?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=1448&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1523673671576-35ff54e94bae?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    ]
+    
     # Initialize Flask app context
     with app.app_context():
         print("Starting seed...")
@@ -68,13 +82,13 @@ if __name__ == '__main__':
                     availability=fake.word(),
                     job_category=fake.word(),
                     salary_expectation=str(randint(20000, 100000)),
-                    skills=' '.join(fake.words()),
-                    qualifications=' '.join(fake.words()),
-                    experience=' '.join(fake.words()),
+                    skills=fake.text(),
+                    qualifications=fake.text(),
+                    experience=fake.text(),
                     github_link=fake.url(),
                     linkedin_link=fake.url(),
                     profile_verified=bool(random.getrandbits(1)),
-                    picture="https://picsum.photos/983/458",
+                    picture=random.choice(picture_urls),
                     testimonial=fake.text(),
                     app_rating=randint(1, 5)
                 )
@@ -96,7 +110,7 @@ if __name__ == '__main__':
                     user_id=user.id,
                     company_name=fake.company(),
                     profile_verified=bool(random.getrandbits(1)),
-                    picture="https://picsum.photos/983/458",
+                    picture=random.choice(picture_urls),
                     testimonial=fake.text(),
                     app_rating=randint(1, 5)
                 )
