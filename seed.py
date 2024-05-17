@@ -184,25 +184,25 @@ if __name__ == '__main__':
             db.session.commit()
 
         # Seed Payments
-            employers = Employer.query.all()  # Fetch all employers outside the loop
-            for employer in employers:  # Iterate over each employer
+        employers = Employer.query.all()  # Fetch all employers outside the loop
+        for employer in employers:  # Iterate over each employer
                 if employer.profile_verified:
                     payment = Payment(
                         employer_id=employer.id,
                         amount=1000,
                         payment_date=datetime.now() - timedelta(days=randint(1, 365)),
-                        payment_status=True
+                        payment_status= True
                     )
                     db.session.add(payment)
                     db.session.commit()
 
-            unverified_employer = Employer.query.filter_by(profile_verified=False).first()
-            if unverified_employer:
+        unverified_employer = Employer.query.filter_by(profile_verified=False).first()
+        if unverified_employer:
                 payment = Payment(
                     employer_id=unverified_employer.id,
                     amount=1000,
                     payment_date=datetime.now() - timedelta(days=randint(1, 365)),
-                    payment_status=True
+                    payment_status= True
                 )
                 db.session.add(payment)
                 db.session.commit()
