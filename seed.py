@@ -74,7 +74,7 @@ if __name__ == '__main__':
                     github_link=fake.url(),
                     linkedin_link=fake.url(),
                     profile_verified=bool(random.getrandbits(1)),
-                    picture='https://png.pngtree.com/png-vector/20230831/ourmid/pngtree-man-avatar-image-for-profile-png-image_9197912.png',
+                    picture="https://picsum.photos/983/458",
                     testimonial=fake.text(),
                     app_rating=randint(1, 5)
                 )
@@ -96,7 +96,7 @@ if __name__ == '__main__':
                     user_id=user.id,
                     company_name=fake.company(),
                     profile_verified=bool(random.getrandbits(1)),
-                    picture='https://cdn-icons-png.flaticon.com/512/602/602232.png',
+                    picture="https://picsum.photos/983/458",
                     testimonial=fake.text(),
                     app_rating=randint(1, 5)
                 )
