@@ -25,7 +25,7 @@ CORS(app)
 load_dotenv()
 
 
-from model import db, User, Jobseeker, Employer, Admin, File
+from model import db, User, Jobseeker, Employer, Admin, File, Offer, Payment
 # Set secret key
 app.secret_key = os.environ.get('SECRET_KEY')
 
@@ -105,6 +105,16 @@ def home():
                 <li><strong>/files/int:id</strong>:GET - Get a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:PATCH - Update a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:DELETE - Delete a jobseeker or employer file</li>
+                <li><strong>/payments</strong>:GET - List of all payments</li>
+                <li><strong>/payments</strong>:POST - Add a new payment</li>
+                <li><strong>/payments/int:id</strong>:GET - Get a payment's details</li>
+                <li><strong>/payments/int:id</strong>:PATCH - Update a payment's details</li>
+                <li><strong>/payments/int:id</strong>:DELETE - Delete a payment</li>
+                <li><strong>/offers</strong>:GET - List of all offers</li>
+                <li><strong>/offers</strong>:POST - Add a new offer</li>
+                <li><strong>/offers/int:id</strong>:GET - Get an offer's details</li>
+                <li><strong>/offers/int:id</strong>:PATCH - Update an offer's details</li>
+                <li><strong>/offers/int:id</strong>:DELETE - Delete an offer</li>
                 <li><strong>/admin_login</strong> -:POST - Admin login</li>
                 <li><strong>/admin_logout</strong> -:DELETE - Admin logout</li>
             </ul>
@@ -425,6 +435,100 @@ class FileByID(Resource):
         db.session.commit()
 
         return '', 204
+    
+class Offers(Resource):
+    def get(self):
+        offers = [offer.to_dict() for offer in Offer.query.all()]
+        return make_response(jsonify(offers), 200)
+
+    def post(self):
+        data = request.get_json()
+
+        # Create a new offer
+        offer = Offer(
+            employer_id=data.get('employer_id'),
+            job_seeker_id=data.get('job_seeker_id'),
+            description=data.get('description'),
+            accept_status=data.get('accept_status')
+        )
+
+        # Add the new offer to the database
+        db.session.add(offer)
+        db.session.commit()
+
+        return make_response(jsonify(offer.to_dict()), 201)
+    
+class OfferByID(Resource):
+    def get(self, id):
+        offer = Offer.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(offer), 200)
+
+    def patch(self, id):
+        offer = Offer.query.filter_by(id=id).first()
+        data = request.get_json()
+
+        for key, value in data.items():
+            setattr(offer, key, value)
+
+        db.session.commit()
+
+        return make_response(jsonify(offer.to_dict()), 200)
+
+    def delete(self, id):
+        offer = Offer.query.filter_by(id=id).first()
+
+        db.session.delete(offer)
+        db.session.commit()
+
+        return '', 204
+    
+class Payments(Resource):
+    def get(self):
+        payments = [payment.to_dict() for payment in Payment.query.all()]
+        return make_response(jsonify(payments), 200)
+
+    def post(self):
+        data = request.get_json()
+
+        # Create a new payment
+        payment = Payment(
+            employer_id=data.get('employer_id'),
+            amount=data.get('amount'),
+            payment_date=data.get('payment_date'),
+            payment_status=data.get('payment_status')
+        )
+
+        # Add the new payment to the database
+        db.session.add(payment)
+        db.session.commit()
+
+        return make_response(jsonify(payment.to_dict()), 201)
+    
+class PaymentByID(Resource):
+    def get(self, id):
+        payment = Payment.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(payment), 200)
+
+    def patch(self, id):
+        payment = Payment.query.filter_by(id=id).first()
+        data = request.get_json()
+
+        for key, value in data.items():
+            setattr(payment, key, value)
+
+        db.session.commit()
+
+        return make_response(jsonify(payment.to_dict()), 200)
+
+    def delete(self, id):
+        payment = Payment.query.filter_by(id=id).first()
+
+        db.session.delete(payment)
+        db.session.commit()
+
+        return '', 204
+
+
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
@@ -440,6 +544,10 @@ api.add_resource(Employers, '/employers')
 api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
+api.add_resource(Offers, '/offers')
+api.add_resource(OfferByID, '/offers/<int:id>')
+api.add_resource(Payments, '/payments')
+api.add_resource(PaymentByID, '/payments/<int:id>')
 
 if __name__ == '__main__':
     with app.app_context():

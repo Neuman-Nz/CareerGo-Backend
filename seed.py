@@ -2,10 +2,13 @@ from random import randint
 from faker import Faker
 import random
 import phonenumbers
+from datetime import datetime, timedelta
+
+
 
 # Local imports
 from app import app  # Import Flask app 
-from model import db, User, Jobseeker, Employer, Admin, File
+from model import db, User, Jobseeker, Employer, Admin, File, Offer, Payment
 
 def generate_valid_phone_number():
     kenya_country_code = '+254'
@@ -39,6 +42,41 @@ if __name__ == '__main__':
         "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=1448&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         "https://images.unsplash.com/photo-1523673671576-35ff54e94bae?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    ]
+
+    file_names = ["Curriculum Vitae",
+                  "Resume",
+                  "Personal Website",
+                  "PortFolio"
+    ]
+
+    availabilities = [
+        "Available",
+        "Not Available",
+        "Needs notice period"
+    ]
+    
+    job_categories = [
+        "Software Engineer",
+        "Doctor",
+        "Teacher",
+        "Designer",
+        "Manager",
+        "Nurse",
+        "Accountant",
+        "Architect",
+        "Consultant",
+        "Electrician",
+        "Mechanic",
+        "Plumber",
+        "Pharmacist",
+        "Project Manager",
+        "Sales Executive",
+        "Marketing Specialist",
+        "Business Analyst",
+        "HR Manager",
+        "Data Scientist",
+        "Cyber Security Specialist"
     ]
     
     # Initialize Flask app context
@@ -79,8 +117,8 @@ if __name__ == '__main__':
                     user_id=user.id,
                     first_name=fake.first_name(),
                     last_name=fake.last_name(),
-                    availability=fake.word(),
-                    job_category=fake.word(),
+                    availability=random.choice(availabilities),
+                    job_category=random.choice(job_categories),
                     salary_expectation=str(randint(20000, 100000)),
                     skills=fake.text(),
                     qualifications=fake.text(),
@@ -121,12 +159,49 @@ if __name__ == '__main__':
                     file = File(
                         employer_id=employer.id,
                         file_path=fake.file_path(),
-                        file_name=fake.file_name()
+                        file_name=random.choice(file_names)
                     )
                     db.session.add(file)
                 db.session.commit()
 
-        
+       # Seed Offer data
+        for _ in range(5):
+            employer = random.choice(Employer.query.all())
+            jobseeker = random.choice(Jobseeker.query.all())
+            offer = Offer(
+                employer_id=employer.id,
+                job_seeker_id=jobseeker.id,
+                description=fake.text(),
+                accept_status=bool(random.getrandbits(1))
+            )
+            db.session.add(offer)
+            db.session.commit()
+
+        # Seed Payments
+            employers = Employer.query.all()  # Fetch all employers outside the loop
+            for employer in employers:  # Iterate over each employer
+                if employer.profile_verified:
+                    payment = Payment(
+                        employer_id=employer.id,
+                        amount=1000,
+                        payment_date=datetime.now() - timedelta(days=randint(1, 365)),
+                        payment_status=True
+                    )
+                    db.session.add(payment)
+                    db.session.commit()
+
+            unverified_employer = Employer.query.filter_by(profile_verified=False).first()
+            if unverified_employer:
+                payment = Payment(
+                    employer_id=unverified_employer.id,
+                    amount=1000,
+                    payment_date=datetime.now() - timedelta(days=randint(1, 365)),
+                    payment_status=True
+                )
+                db.session.add(payment)
+                db.session.commit()
+
+            
         # Create admin
         admin = Admin(email='admin@gmail.com', password='@ADMIN1')
         db.session.add(admin)

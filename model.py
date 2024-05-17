@@ -116,10 +116,14 @@ class Jobseeker(db.Model, SerializerMixin):
     # Relationships
     user = db.relationship("User", back_populates="jobseeker")
     files = db.relationship("File", back_populates="jobseeker")
+    payments = db.relationship("Payment", back_populates="jobseeker")
+    offers = db.relationship("Offer", back_populates="jobseeker")
+
+
 
 
     def __repr__(self):
-        return f'<Jobseeker {self.job_category} >'
+        return f'<Jobseeker {self.first_name} >'
     
     @validates('app_rating')
     def validate_app_rating(self, key, app_rating):
@@ -144,6 +148,8 @@ class Employer(db.Model, SerializerMixin):
     # Relationships
     user = db.relationship("User", back_populates="employer")
     files = db.relationship("File", back_populates="employer")
+    payments = db.relationship("Payment", back_populates="employer")
+    offers = db.relationship("Offer", back_populates="employer")
 
     def __repr__(self):
         return f'<Employer {self.company_name}>'
@@ -192,32 +198,44 @@ class File(db.Model, SerializerMixin):
     employer = db.relationship("Employer", back_populates="files")
 
     def __repr__(self):
-        return f'<File >'
+        return f'<File name: {self.file_name}>'
     
-# class Offer(db.Model):
-#     __tablename__ = 'offers'
-#     id = db.Column(db.Integer, primary_key=True)
-#     employer_id = db.Column(db.Integer, db.ForeignKey('employers.id'), nullable=False)
-#     job_seeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'), nullable=False)
-#     description = db.Column(db.Text, nullable=False)
-#     accepted = db.Column(db.Boolean, default=False)
+
+class Payment(db.Model, SerializerMixin):
+    __tablename__ = 'payments'
+
+    serialize_rules = ('-jobseeker', '-employer',)
+
+    id = db.Column(db.Integer, primary_key=True)
+    jobseeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'))
+    employer_id = db.Column(db.Integer, db.ForeignKey('employers.id'))
+    amount = db.Column(db.Integer, nullable=False)
+    payment_date = db.Column(db.Date, nullable=False)
+    payment_status = db.Column(db.Boolean, default=False)
     
-#     employer = db.relationship('Employer', backref=db.backref('offers', lazy=True))
-#     job_seeker = db.relationship('Jobseeker', backref=db.backref('offers', lazy=True))
+    jobseeker = db.relationship("Jobseeker", back_populates="payments")
+    employer = db.relationship("Employer", back_populates="payments")
 
-#     def __repr__(self):
-#         return f'<Offer>'
+    def __repr__(self):
+        return f'<Payment status: {self.payment_status}>'
+    
+class Offer(db.Model, SerializerMixin): 
+    __tablename__ = 'offers'
+
+    serialize_rules = ('-jobseeker', '-employer',)
+
+    id = db.Column(db.Integer, primary_key=True)
+    employer_id = db.Column(db.Integer, db.ForeignKey('employers.id'), nullable=False)
+    job_seeker_id = db.Column(db.Integer, db.ForeignKey('jobseekers.id'), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    accept_status = db.Column(db.Boolean, default=False)
+
+    jobseeker = db.relationship("Jobseeker", back_populates="offers")
+    employer = db.relationship("Employer", back_populates="offers")
+
+    def __repr__(self):
+        return f'<Offer status: {self.accept_status}>'
 
 
     
-# class Payment(db.Model):
-#     __tablename__ = 'payments'
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-#     amount = db.Column(db.Integer, nullable=False)
-#     payment_date = db.Column(db.Date, nullable=False)
-#     payment_status = db.Column(db.Boolean, default=False)
-#     user = db.relationship('User', backref=db.backref('payments', lazy=True))
 
-#     def __repr__(self):
-#         return f'<Payment>'
