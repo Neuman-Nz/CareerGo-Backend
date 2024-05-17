@@ -3,6 +3,8 @@ from flask import Flask, jsonify, request, make_response, session,render_templat
 from flask_restful import Resource
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS
+CORS(app, supports_credentials=True)
 # import requests
 # from requests.auth import HTTPBasicAuth
 # import json
@@ -94,6 +96,8 @@ def home():
                 <li><strong>/files/int:id</strong>:GET - Get a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:PATCH - Update a jobseeker or employer file</li>
                 <li><strong>/files/int:id</strong>:DELETE - Delete a jobseeker or employer file</li>
+                <li><strong>/admin_login</strong> -:POST - Admin login</li>
+                <li><strong>/admin_logout</strong> -:DELETE - Admin logout</li>
             </ul>
         </div>
     </body>
@@ -111,22 +115,12 @@ class AdminLogin(Resource):
         if not email or not password:
             return {'message': 'email and password are required'}, 400
 
-        # Implement logic to validate admin credentials using email
-        admin = self.validate_admin(email, password)
-
-        if not admin:
-            return {'error': 'Unauthorized user'}, 401
-
-        session['admin_id'] = admin.id  
-        return admin.to_dict(), 200 
-
-    def validate_admin(self, email, password):
-
         admin = Admin.query.filter_by(email=email).first()
         if admin and admin.check_password(password):
-            return admin  
-        return None
-    
+            session['admin_id'] = admin.id
+            return jsonify(admin.to_dict()), 200
+        return {'error': 'Unauthorized user'}, 401
+
 class AdminLogout(Resource):
     def delete(self):
         if 'admin_id' in session:
@@ -134,6 +128,7 @@ class AdminLogout(Resource):
             return '', 204
         else:
             return {'message': 'Not logged in as admin'}, 401
+
         
 
 class Login(Resource):    
