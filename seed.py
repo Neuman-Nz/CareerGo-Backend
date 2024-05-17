@@ -4,7 +4,7 @@ import random
 import phonenumbers
 
 # Local imports
-from config import app  # Import Flask app 
+from app import app  # Import Flask app 
 from model import db, User, Jobseeker, Employer, Admin, File
 
 def generate_valid_phone_number():
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
         
         # Create admin
-        admin = Admin(email='admin@gmail.com', password='admin1234')
+        admin = Admin(email='admin@gmail.com', password='@ADMIN1')
         db.session.add(admin)
         db.session.commit()
 

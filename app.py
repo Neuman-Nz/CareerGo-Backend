@@ -1,15 +1,24 @@
-from config import app, api
-from flask import Flask, jsonify, request, make_response, session,render_template
-from flask_restful import Resource
+from flask import Flask, jsonify, request, make_response, session
+from flask_restful import Resource,Api
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
-CORS(app, supports_credentials=True)
-# import requests
-# from requests.auth import HTTPBasicAuth
-# import json
-# from credentials import MpesaAccessToken, LipanaMpesaPpassword
+from flask_migrate import Migrate
+from model import db
 
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.json.compact = False
+
+migrate = Migrate(app, db)
+db.init_app(app)
+
+
+api = Api(app)
+
+CORS(app)
     
 
 # Load environment variables from .env file
@@ -118,7 +127,7 @@ class AdminLogin(Resource):
         admin = Admin.query.filter_by(email=email).first()
         if admin and admin.check_password(password):
             session['admin_id'] = admin.id
-            return jsonify(admin.to_dict()), 200
+            return admin.to_dict(), 200  # Return a dictionary directly
         return {'error': 'Unauthorized user'}, 401
 
 class AdminLogout(Resource):
@@ -126,8 +135,6 @@ class AdminLogout(Resource):
         if 'admin_id' in session:
             session.pop('admin_id')
             return '', 204
-        else:
-            return {'message': 'Not logged in as admin'}, 401
 
         
 
@@ -167,8 +174,7 @@ class Logout(Resource):
         if 'user_id' in session:
             session.pop('user_id')
             return '', 204
-        else:
-            return {'message': 'User is not logged in'}, 404
+
 
 class CheckSession(Resource):
     def get(self):
@@ -419,59 +425,6 @@ class FileByID(Resource):
         db.session.commit()
 
         return '', 204
-    
-
-# # mpesa stk push 
-
-# class LipaNaMpesa(Resource):
-#     def get(self,id):
-#         # Check if user is logged in
-#         # if 'user_id' not in session:
-#         #     return {'error': 'Unauthorized access'}, 401
-        
-#         access_token = MpesaAccessToken.validated_mpesa_access_token
-#         api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
-#         headers = {"Authorization": "Bearer %s" % access_token}
-        
-    
-#         # Retrieve user details
-#         user = User.query.filter_by(id=id).first()
-        
-
-#         # Retrieve user's phone number
-#         phone_number = user.phone_number
-#         # Remove the '+' character
-#         cleaned_phone_number = phone_number.replace("+", "")
-#         # the below line of code fetched the number from frontend after submisiion of form
-#         # phone_number = request.form.get("phone_no")
-        
-        
-#         request_data = {
-#             "BusinessShortCode": LipanaMpesaPpassword.Business_short_code,
-#             "Password": LipanaMpesaPpassword.decode_password,
-#             "Timestamp": LipanaMpesaPpassword.lipa_time,
-#             "TransactionType": "CustomerPayBillOnline",
-#             "Amount": 1000,
-#             # use phone_no when fetched 
-#             "PartyA":cleaned_phone_number,
-#             "PartyB": LipanaMpesaPpassword.Business_short_code,
-#             # use phone_no when fetched 
-#             "PhoneNumber": cleaned_phone_number,
-#             "CallBackURL": "https://sandbox.safaricom.co.ke/mpesa/",
-#             "AccountReference": "CareerGo",
-#             "TransactionDesc": "Testing stk push"
-#         }
-
-#         response = requests.post(api_url, json=request_data, headers=headers)
-        
-        
-#         if response.status_code == 200:
-#             return {'message': 'STK push initiated successfully'}, 200
-#         else:
-#             return {'error': 'Failed to initiate STK push'}, 500
-
-
-
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
@@ -487,7 +440,6 @@ api.add_resource(Employers, '/employers')
 api.add_resource(EmployerByID, '/employers/<int:id>')
 api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
-#api.add_resource(LipaNaMpesa, '/users/<int:id>/lipa_na_mpesa')
 
 if __name__ == '__main__':
     with app.app_context():
