@@ -227,7 +227,11 @@ class Users(Resource):
 
         # Add the new user to the database
         db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {'error': str(e)}, 500
 
         return make_response(jsonify({'message': 'User successfully registered', 'user': new_user.to_dict()}), 201)
 
@@ -276,6 +280,8 @@ class Jobseekers(Resource):
         # Create a new jobseeker
         jobseeker = Jobseeker(
             user_id=user_id,
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
             availability=data.get('availability'),
             job_category=data.get('job_category'),
             salary_expectation=data.get('salary_expectation'),
@@ -284,13 +290,16 @@ class Jobseekers(Resource):
             experience=data.get('experience'),
             github_link=data.get('github_link'),
             linkedin_link=data.get('linkedin_link'),
-            profile_verified=data.get('profile_verified'), #Front end to send json as false
             picture=data.get('picture')
         )
 
         # Add the new jobseeker to the database
         db.session.add(jobseeker)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {'error': str(e)}, 500
 
         return make_response(jsonify(jobseeker.to_dict()), 201)
 
