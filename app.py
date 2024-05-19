@@ -458,7 +458,7 @@ class Offers(Resource):
             employer_id=data.get('employer_id'),
             job_seeker_id=data.get('job_seeker_id'),
             description=data.get('description'),
-            accept_status=data.get('accept_status')
+            accept_status=False,
         )
 
         # Add the new offer to the database
