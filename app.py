@@ -451,21 +451,32 @@ class Offers(Resource):
         return make_response(jsonify(offers), 200)
 
     def post(self):
-        data = request.get_json()
+        data = request.json
+        employer_id = data.get('employer_id')
+        job_seeker_id = data.get('job_seeker_id')
+        description = data.get('description')
+        
+        
+        if not employer_id or not job_seeker_id or not description:
+            return {'error': 'Missing required data'}, 400
 
-        # Create a new offer
-        offer = Offer(
-            employer_id=data.get('employer_id'),
-            job_seeker_id=data.get('job_seeker_id'),
-            description=data.get('description'),
-            accept_status=False,
+        employer = Employer.query.get(employer_id)
+        job_seeker = Jobseeker.query.get(job_seeker_id)
+
+        if not employer or not job_seeker:
+            return {'error': 'Employer or Jobseeker not found'}, 404
+
+        new_offer = Offer(
+            employer_id=employer_id,
+            job_seeker_id=job_seeker_id,
+            description=description,
+            accepted=False  
         )
 
-        # Add the new offer to the database
-        db.session.add(offer)
+        db.session.add(new_offer)
         db.session.commit()
 
-        return make_response(jsonify(offer.to_dict()), 201)
+        return {'message': 'Offer created successfully', 'offer': str(new_offer)}, 201
     
 class OfferByID(Resource):
     def get(self, id):
