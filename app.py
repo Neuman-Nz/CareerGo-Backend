@@ -348,7 +348,7 @@ class Employers(Resource):
         employer = Employer(
             user_id=user_id,
             company_name=data.get('company_name'),
-            profile_verified=data.get('profile_verified'), #False from Frontend..
+            profile_verified=False,
             picture=data.get('picture')
         )
 
