@@ -470,7 +470,7 @@ class Offers(Resource):
             employer_id=employer_id,
             job_seeker_id=job_seeker_id,
             description=description,
-            accepted=False  
+            accept_status=False  
         )
 
         db.session.add(new_offer)
