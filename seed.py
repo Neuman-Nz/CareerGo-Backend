@@ -240,6 +240,17 @@ if __name__ == '__main__':
                 db.session.add(payment)
                 db.session.commit()
 
+        for _ in range(2):
+            employer = random.choice(employers)
+            offer = Offer(
+                employer_id=employer.id,
+                job_seeker_id=jobseeker_dan.id,
+                description=fake.text(),
+                accept_status=bool(random.getrandbits(1))
+            )
+            db.session.add(offer)
+        db.session.commit()
+
             
         # Create admin
         admin = Admin(email='admin@gmail.com', password='@ADMIN1')
