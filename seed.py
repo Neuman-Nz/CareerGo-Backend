@@ -58,7 +58,8 @@ if __name__ == '__main__':
 
     availabilities = [
         "Available",
-        "Not Available",
+        "Full Time",
+        "Part Time",
         "Needs notice period"
     ]
     
@@ -93,6 +94,7 @@ if __name__ == '__main__':
         db.drop_all()
         db.create_all()
 
+        # Create user Dan
         dan = User(
             username='dan',
             email='danspmunene@gmail.com',
@@ -101,6 +103,37 @@ if __name__ == '__main__':
             role='jobseeker' 
         )
         db.session.add(dan)
+        db.session.commit()
+        
+        # Create Jobseeker profile for Dan
+        jobseeker_dan = Jobseeker(
+            user_id=dan.id,
+            first_name='Dan',
+            last_name='Muchiri',
+            availability=random.choice(availabilities),
+            job_category='Software Developer',
+            salary_expectation=str(randint(20000, 100000)),
+            skills=fake.text(),
+            qualifications=fake.text(),
+            experience=fake.text(),
+            github_link="https://github.com/Dan-Muchiri",
+            linkedin_link="https://www.linkedin.com/in/dan-munene-4a4364245/",
+            profile_verified=False,
+            picture="https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            testimonial=fake.text(),
+            app_rating=5
+        )
+        db.session.add(jobseeker_dan)
+        db.session.commit()
+
+        # Generate fake files for Jobseeker Dan
+        for _ in range(randint(1, 2)):
+            file = File(
+                jobseeker_id=jobseeker_dan.id,
+                file_path="https://www.canva.com/design/DAF1oaO_juM/AJbTRI-L0jjnDeZYzFqmig/view?utm_content=DAF1oaO_juM&utm_campaign=designshare&utm_medium=link&utm_source=viewer",
+                file_name=random.choice(jobseeker_file_names)
+            )
+            db.session.add(file)
         db.session.commit()
         
         # Seed data
