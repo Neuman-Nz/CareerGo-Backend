@@ -112,6 +112,7 @@ def home():
                 <li><strong>/payments/int:id</strong>:DELETE - Delete a payment</li>
                 <li><strong>/offers</strong>:GET - List of all offers</li>
                 <li><strong>/offers</strong>:POST - Add a new offer</li>
+                <li><strong>/offers/employer/<int:employer_id></strong>:GET - Add a new offer</li>
                 <li><strong>/offers/int:id</strong>:GET - Get an offer's details</li>
                 <li><strong>/offers/int:id</strong>:PATCH - Update an offer's details</li>
                 <li><strong>/offers/int:id</strong>:DELETE - Delete an offer</li>
@@ -548,7 +549,22 @@ class PaymentByID(Resource):
 
         return '', 204
 
-
+class OfferByEmployerResource(Resource):
+    def get(self, employer_id):
+        try:
+            # Query the database for offers with the given employer_id
+            offers = Offer.query.filter_by(employer_id=employer_id).all()
+            if not offers:
+                return {'message': 'No offers found for this employer'}, 404
+            
+            # Serialize the offers to a list of dictionaries
+            offers_serialized = [offer.to_dict() for offer in offers]
+            return jsonify(offers_serialized)
+        
+        except NoResultFound:
+            return {'message': 'No offers found for this employer'}, 404
+        except Exception as e:
+            return {'message': str(e)}, 500
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
@@ -566,6 +582,7 @@ api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
 api.add_resource(Offers, '/offers')
 api.add_resource(OfferByID, '/offers/<int:id>')
+api.add_resource(OfferByEmployerResource, '/offers/employer/<int:employer_id>')
 api.add_resource(Payments, '/payments')
 api.add_resource(PaymentByID, '/payments/<int:id>')
 
