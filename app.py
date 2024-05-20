@@ -112,6 +112,7 @@ def home():
                 <li><strong>/payments/int:id</strong>:DELETE - Delete a payment</li>
                 <li><strong>/offers</strong>:GET - List of all offers</li>
                 <li><strong>/offers</strong>:POST - Add a new offer</li>
+                <li><strong>/offers/employer/<int:employer_id></strong>:GET - Add a new offer</li>
                 <li><strong>/offers/int:id</strong>:GET - Get an offer's details</li>
                 <li><strong>/offers/int:id</strong>:PATCH - Update an offer's details</li>
                 <li><strong>/offers/int:id</strong>:DELETE - Delete an offer</li>
@@ -348,7 +349,7 @@ class Employers(Resource):
         employer = Employer(
             user_id=user_id,
             company_name=data.get('company_name'),
-            profile_verified=data.get('profile_verified'), #False from Frontend..
+            profile_verified=False,
             picture=data.get('picture')
         )
 
@@ -451,21 +452,32 @@ class Offers(Resource):
         return make_response(jsonify(offers), 200)
 
     def post(self):
-        data = request.get_json()
+        data = request.json
+        employer_id = data.get('employer_id')
+        job_seeker_id = data.get('job_seeker_id')
+        description = data.get('description')
+        
+        
+        if not employer_id or not job_seeker_id or not description:
+            return {'error': 'Missing required data'}, 400
 
-        # Create a new offer
-        offer = Offer(
-            employer_id=data.get('employer_id'),
-            job_seeker_id=data.get('job_seeker_id'),
-            description=data.get('description'),
-            accept_status=data.get('accept_status')
+        employer = Employer.query.get(employer_id)
+        job_seeker = Jobseeker.query.get(job_seeker_id)
+
+        if not employer or not job_seeker:
+            return {'error': 'Employer or Jobseeker not found'}, 404
+
+        new_offer = Offer(
+            employer_id=employer_id,
+            job_seeker_id=job_seeker_id,
+            description=description,
+            accept_status=False  
         )
 
-        # Add the new offer to the database
-        db.session.add(offer)
+        db.session.add(new_offer)
         db.session.commit()
 
-        return make_response(jsonify(offer.to_dict()), 201)
+        return {'message': 'Offer created successfully', 'offer': str(new_offer)}, 201
     
 class OfferByID(Resource):
     def get(self, id):
@@ -537,7 +549,22 @@ class PaymentByID(Resource):
 
         return '', 204
 
-
+class OfferByEmployerResource(Resource):
+    def get(self, employer_id):
+        try:
+            # Query the database for offers with the given employer_id
+            offers = Offer.query.filter_by(employer_id=employer_id).all()
+            if not offers:
+                return {'message': 'No offers found for this employer'}, 404
+            
+            # Serialize the offers to a list of dictionaries
+            offers_serialized = [offer.to_dict() for offer in offers]
+            return jsonify(offers_serialized)
+        
+        except NoResultFound:
+            return {'message': 'No offers found for this employer'}, 404
+        except Exception as e:
+            return {'message': str(e)}, 500
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
@@ -555,6 +582,7 @@ api.add_resource(Files, '/files')
 api.add_resource(FileByID, '/files/<int:id>')
 api.add_resource(Offers, '/offers')
 api.add_resource(OfferByID, '/offers/<int:id>')
+api.add_resource(OfferByEmployerResource, '/offers/employer/<int:employer_id>')
 api.add_resource(Payments, '/payments')
 api.add_resource(PaymentByID, '/payments/<int:id>')
 
