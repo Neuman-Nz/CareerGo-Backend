@@ -6,17 +6,31 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from model import db
 
+# app.py stk push
+from flask_mpesa import MpesaAPI
+import datetime
+# import mpesaapi
+import requests
+from requests.auth import HTTPBasicAuth
+import json
+from credentials import MpesaAccessToken, LipanaMpesaPpassword
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
+app.config["API_ENVIRONMENT"] = "sandbox" #sandbox 
+app.config["APP_KEY"] = "9uduOIOlRPIocAsG6toGNeB9hWVNFcOfOCKBgihZo9aAGDe4" # App_key from developers portal
+app.config["APP_SECRET"] = "uw1XG0KKWGkAAQT0KfFg1p7fHcIt2H4aUXvQwFDnl6SLoJX5AvjboqGj0iCF3eoc" #App_Secret from developers portal
+
 migrate = Migrate(app, db)
 db.init_app(app)
 
 
 api = Api(app)
+mpesa_api=MpesaAPI(app)
 
 CORS(app)
     
@@ -565,6 +579,74 @@ class OfferByEmployerResource(Resource):
             return {'message': 'No offers found for this employer'}, 404
         except Exception as e:
             return {'message': str(e)}, 500
+        
+        
+        
+
+
+def generate_password(shortcode, passkey, timestamp):
+    import base64
+    data_to_encode = shortcode + passkey + timestamp
+    encoded_string = base64.b64encode(data_to_encode.encode())
+    return encoded_string.decode('utf-8')
+@app.route('/get_access_token', methods=['GET'])
+def get_access_token():
+    consumer_key = '9uduOIOlRPIocAsG6toGNeB9hWVNFcOfOCKBgihZo9aAGDe4'
+    consumer_secret = 'uw1XG0KKWGkAAQT0KfFg1p7fHcIt2H4aUXvQwFDnl6SLoJX5AvjboqGj0iCF3eoc'
+    api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+
+    r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+    mpesa_access_token = json.loads(r.text)
+    validated_mpesa_access_token = mpesa_access_token['access_token']
+
+    return validated_mpesa_access_token
+# mpesa stk push 
+@app.route('/transact/mpesaexpress', methods=['POST'])
+def simulate_stk_push():
+    request_data = request.get_json()
+    phone_number = request_data.get('phone_number')
+    
+    if not phone_number:
+        return jsonify({"error": "Phone number is required"}), 400
+    
+    access_token = MpesaAccessToken.validated_mpesa_access_token
+    api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+    headers = {"Authorization": "Bearer %s" % access_token}
+    
+    # Generate the timestamp
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    
+    # Generate the password
+    business_shortcode = "174379"
+    passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+    password = generate_password(business_shortcode, passkey, timestamp)
+    
+    # Prepare the request data
+    data = {
+        "BusinessShortCode": business_shortcode,
+        "Password": password,
+        "Timestamp": timestamp,
+        "TransactionType": "CustomerPayBillOnline",
+        "Amount": "1000",
+        "PartyA": phone_number,
+        "PartyB": business_shortcode,
+        "PhoneNumber": phone_number,
+        "CallBackURL": "https://job-seeker-99va.onrender.com",
+        "AccountReference": "CareerGo",  # You can put any reference text here
+        "TransactionDesc": "Payment of Account Subscription"         # Description of the transaction
+    }
+    
+    # Make the STK Push request
+     
+   
+    response = requests.post(api_url, json=data, headers=headers)
+        
+        
+    if response.status_code == 200:
+        return {'message': 'STK push initiated successfully'}, 200
+    else:
+        return {'error': 'Failed to initiate STK push'}, 500
+
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
