@@ -511,7 +511,6 @@ class Offers(Resource):
         job_seeker_id = data.get('job_seeker_id')
         description = data.get('description')
         
-        
         if not employer_id or not job_seeker_id or not description:
             return {'error': 'Missing required data'}, 400
 
@@ -531,7 +530,21 @@ class Offers(Resource):
         db.session.add(new_offer)
         db.session.commit()
 
+        # Send email notification to the job seeker
+        self.send_offer_email(job_seeker)
+
         return {'message': 'Offer created successfully', 'offer': str(new_offer)}, 201
+
+    @staticmethod
+    def send_offer_email(job_seeker):
+        msg = Message("New Job Offer", recipients=[job_seeker.user.email])
+        msg.body = f"Hello {job_seeker.first_name},\n\nYou have received a new job offer. Log in to your account to view the details.\n\nRegards,\nThe CareerGo Team"
+        
+        try:
+            mail.send(msg)
+            app.logger.info(f"Email sent to {job_seeker.user.email} for new job offer")
+        except Exception as e:
+            app.logger.error(f"Failed to send email to {job_seeker.user.email}: {str(e)}")
     
 class OfferByID(Resource):
     def get(self, id):
@@ -540,14 +553,35 @@ class OfferByID(Resource):
 
     def patch(self, id):
         offer = Offer.query.filter_by(id=id).first()
+        if not offer:
+            return {'error': 'Offer not found'}, 404
+        
         data = request.get_json()
 
         for key, value in data.items():
             setattr(offer, key, value)
 
+        # Store the original accept_status before updating
+        original_status = offer.accept_status
+
         db.session.commit()
 
+        # If the accept_status has changed to accepted, send an email to the employer
+        if offer.accept_status and not original_status:
+            employer_id = offer.employer_id
+            employer_email = Employer.query.filter_by(id=employer_id).value('email')
+            if employer_email:
+                subject = "Job Offer Accepted"
+                body = f"Congratulations! Your job offer has been accepted by the job seeker."
+                self.send_email(employer_email, subject, body)
+
         return make_response(jsonify(offer.to_dict()), 200)
+
+    @staticmethod
+    def send_email(to, subject, body):
+        msg = Message(subject, recipients=[to])
+        msg.body = body
+        mail.send(msg)
 
     def delete(self, id):
         offer = Offer.query.filter_by(id=id).first()
