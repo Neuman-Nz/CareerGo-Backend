@@ -246,7 +246,7 @@ if __name__ == '__main__':
                 employer_id=employer.id,
                 job_seeker_id=jobseeker_dan.id,
                 description=fake.text(),
-                accept_status=bool(random.getrandbits(1))
+                accept_status= False
             )
             db.session.add(offer)
         db.session.commit()

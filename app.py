@@ -5,15 +5,24 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_migrate import Migrate
 from model import db
+from flask_mail import Mail
+from flask_mail import Message
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'dan.careergo@gmail.com'
+app.config['MAIL_PASSWORD'] = 'tjyq ofma qvhn iyzq'
+app.config['MAIL_DEFAULT_SENDER'] = 'dan.careergo@gmail.com'
 
 migrate = Migrate(app, db)
 db.init_app(app)
+mail = Mail(app)
 
 
 api = Api(app)
@@ -125,6 +134,8 @@ def home():
     """
 
 # Resource classes
+
+
 
 class AdminLogin(Resource):
     def post(self):
@@ -257,10 +268,28 @@ class UserByID(Resource):
     def delete(self, id):
         user = User.query.filter_by(id=id).first()
 
+        if user.role == 'jobseeker':
+            profile = Jobseeker.query.filter_by(user_id=id).first()
+        elif user.role == 'employer':
+            profile = Employer.query.filter_by(user_id=id).first()
+
+        if profile:
+            db.session.delete(profile)
+
         db.session.delete(user)
         db.session.commit()
 
-        return '', 204
+        # Send email notification
+        user_email = user.email
+        subject = "Account Rejected"
+        body = "Your account has been rejected by the admin."
+        self.send_email(user_email, subject, body)
+       
+    @staticmethod
+    def send_email(to, subject, body):
+        msg = Message(subject, recipients=[to])
+        msg.body = body
+        mail.send(msg)
     
 class Jobseekers(Resource):
     def get(self):
@@ -319,7 +348,20 @@ class JobseekerByID(Resource):
 
         db.session.commit()
 
+        # Send email notification
+        if 'profile_verified' in data:
+            subject = "Profile Verification Status Changed"
+            body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
+            self.send_email(jobseeker.user.email, subject, body)
+
         return make_response(jsonify(jobseeker.to_dict()), 200)
+
+
+    @staticmethod
+    def send_email(to, subject, body):
+        msg = Message(subject, recipients=[to])
+        msg.body = body
+        mail.send(msg)
 
     def delete(self, id):
         jobseeker = Jobseeker.query.filter_by(id=id).first()
@@ -374,7 +416,19 @@ class EmployerByID(Resource):
 
         db.session.commit()
 
+        # Send email notification
+        if 'profile_verified' in data:
+            subject = "Profile Verification Status Changed"
+            body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
+            self.send_email(employer.user.email, subject, body)
+
         return make_response(jsonify(employer.to_dict()), 200)
+
+    @staticmethod
+    def send_email(to, subject, body):
+        msg = Message(subject, recipients=[to])
+        msg.body = body
+        mail.send(msg)
 
     def delete(self, id):
         employer = Employer.query.filter_by(id=id).first()
