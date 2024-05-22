@@ -320,8 +320,7 @@ class Jobseekers(Resource):
             experience=data.get('experience'),
             github_link=data.get('github_link'),
             linkedin_link=data.get('linkedin_link'),
-            picture=data.get('picture'),
-            profile_verified = False
+            picture=data.get('picture')
         )
 
         # Add the new jobseeker to the database
