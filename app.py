@@ -604,7 +604,9 @@ def get_access_token():
 @app.route('/transact/mpesaexpress', methods=['POST'])
 def simulate_stk_push():
     request_data = request.get_json()
+    print("Received request data:", request_data)
     phone_number = request_data.get('phone_number')
+     
     
     if not phone_number:
         return jsonify({"error": "Phone number is required"}), 400
@@ -627,7 +629,7 @@ def simulate_stk_push():
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
-        "Amount": "1000",
+        "Amount": "1",
         "PartyA": phone_number,
         "PartyB": business_shortcode,
         "PhoneNumber": phone_number,
@@ -641,12 +643,38 @@ def simulate_stk_push():
    
     response = requests.post(api_url, json=data, headers=headers)
         
-        
-    if response.status_code == 200:
-        return {'message': 'STK push initiated successfully'}, 200
-    else:
-        return {'error': 'Failed to initiate STK push'}, 500
+    print(response.text)
+    return {'message': 'STK push initiated successfully'}, 200
+    
+@app.route('/callback-url',methods=["POST"])
+def callback_url():
+    #get json data set to this route
+    json_data = request.get_json()
+    #get result code and probably check for transaction success or failure
+    result_code=json_data["Body"]["stkCallback"]["ResultCode"]
+    message={
+        "ResultCode":0,
+        "ResultDesc":"success",
+        "ThirdPartyTransID":"h234k2h4krhk2"
+    }
+    #if result code is 0 you can proceed and save the data else if its any other number you can track the transaction
+    return jsonify(result_code),200
 
+@app.route("/transaction-status")
+def transaction_status():
+    data = {"initiator": "",
+            "transaction_id": "",
+            "party_a": "",
+            "security_credential": "",
+            "identifier_type": "",
+            "remarks": "",
+            "queue_timeout_url": "",
+            "result_url": "",
+            "occassion": ""
+            }
+    status = mpesa_api.TransactionStatus.check_transaction_status(**data)
+    # use status to capture the response
+    return status
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
