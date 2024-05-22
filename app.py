@@ -320,7 +320,8 @@ class Jobseekers(Resource):
             experience=data.get('experience'),
             github_link=data.get('github_link'),
             linkedin_link=data.get('linkedin_link'),
-            picture=data.get('picture')
+            picture=data.get('picture'),
+            profile_verified = False
         )
 
         # Add the new jobseeker to the database
@@ -348,11 +349,11 @@ class JobseekerByID(Resource):
 
         db.session.commit()
 
-        # Send email notification
+            # Send email notification
         if 'profile_verified' in data:
-            subject = "Profile Verification Status Changed"
-            body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
-            self.send_email(jobseeker.user.email, subject, body)
+                subject = "Profile Verification Status Changed"
+                body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
+                self.send_email(jobseeker.user.email, subject, body)
 
         return make_response(jsonify(jobseeker.to_dict()), 200)
 
