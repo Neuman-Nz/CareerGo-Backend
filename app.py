@@ -352,11 +352,11 @@ class JobseekerByID(Resource):
 
             db.session.commit()
 
-            # # Send email notification
-            # if 'profile_verified' in data:
-            #     subject = "Profile Verification Status Changed"
-            #     body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
-            #     self.send_email(jobseeker.user.email, subject, body)
+            # Send email notification
+            if 'profile_verified' in data:
+                subject = "Profile Verification Status Changed"
+                body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
+                self.send_email(jobseeker.user.email, subject, body)
 
             return make_response(jsonify(jobseeker.to_dict()), 200)
 
