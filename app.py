@@ -341,21 +341,23 @@ class JobseekerByID(Resource):
         return make_response(jsonify(jobseeker), 200)
 
     def patch(self, id):
-        jobseeker = Jobseeker.query.filter_by(id=id).first()
-        data = request.get_json()
+            jobseeker = Jobseeker.query.filter_by(id=id).first()
+            if not jobseeker:
+                return make_response(jsonify({"error": "Jobseeker not found"}), 404)
+            data = request.get_json()
 
-        for key, value in data.items():
-            setattr(jobseeker, key, value)
+            for key, value in data.items():
+                setattr(jobseeker, key, value)
 
-        db.session.commit()
+            db.session.commit()
 
             # Send email notification
-        if 'profile_verified' in data:
+            if 'profile_verified' in data:
                 subject = "Profile Verification Status Changed"
                 body = f"Your profile has been {'verified' if data['profile_verified'] else 'unverified'} by the admin."
                 self.send_email(jobseeker.user.email, subject, body)
 
-        return make_response(jsonify(jobseeker.to_dict()), 200)
+            return make_response(jsonify(jobseeker.to_dict()), 200)
 
 
     @staticmethod
