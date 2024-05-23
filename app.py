@@ -9,7 +9,6 @@ from model import db
 # app.py stk push
 from flask_mpesa import MpesaAPI
 import datetime
-# import mpesaapi
 import requests
 from requests.auth import HTTPBasicAuth
 import json
@@ -605,15 +604,24 @@ def get_access_token():
 def simulate_stk_push():
     request_data = request.get_json()
     print("Received request data:", request_data)
-    phone_number = request_data.get('phone_number')
-     
+    phone = request_data.get('phone_number')
+    employer_id = request_data.get('employer_id')
     
-    if not phone_number:
+    
+    if not phone:
         return jsonify({"error": "Phone number is required"}), 400
-    
+    if phone.startswith("+"):
+        phone = phone.replace("+", "")
+    elif phone.startswith("0"):
+        phone = "254" + phone[1:]
+    elif phone.startswith("7"):
+        phone = "254" + phone
+        
+   
     access_token = MpesaAccessToken.validated_mpesa_access_token
     api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
-    headers = {"Authorization": "Bearer %s" % access_token}
+    headers = {"Authorization": "Bearer %s" % access_token,
+                "Content-Type": "application/json"}
     
     # Generate the timestamp
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -630,11 +638,11 @@ def simulate_stk_push():
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
         "Amount": "1",
-        "PartyA": phone_number,
+        "PartyA": phone,
         "PartyB": business_shortcode,
-        "PhoneNumber": phone_number,
+        "PhoneNumber": phone,
         "CallBackURL": "https://job-seeker-99va.onrender.com",
-        "AccountReference": "CareerGo",  # You can put any reference text here
+         "AccountReference": f"CareerGo-EmployerID-{employer_id}",  # You can put any reference text here
         "TransactionDesc": "Payment of Account Subscription"         # Description of the transaction
     }
     
@@ -643,38 +651,49 @@ def simulate_stk_push():
    
     response = requests.post(api_url, json=data, headers=headers)
         
-    print(response.text)
-    return {'message': 'STK push initiated successfully'}, 200
-    
-@app.route('/callback-url',methods=["POST"])
-def callback_url():
-    #get json data set to this route
-    json_data = request.get_json()
-    #get result code and probably check for transaction success or failure
-    result_code=json_data["Body"]["stkCallback"]["ResultCode"]
-    message={
-        "ResultCode":0,
-        "ResultDesc":"success",
-        "ThirdPartyTransID":"h234k2h4krhk2"
-    }
-    #if result code is 0 you can proceed and save the data else if its any other number you can track the transaction
-    return jsonify(result_code),200
+    result = response.json()
+    print(result)
+    return result, 200
 
-@app.route("/transaction-status")
-def transaction_status():
-    data = {"initiator": "",
-            "transaction_id": "",
-            "party_a": "",
-            "security_credential": "",
-            "identifier_type": "",
-            "remarks": "",
-            "queue_timeout_url": "",
-            "result_url": "",
-            "occassion": ""
-            }
-    status = mpesa_api.TransactionStatus.check_transaction_status(**data)
-    # use status to capture the response
-    return status
+@app.route('/verifySTKPayment', methods=['POST'])
+def verifySTKPayment():
+    access_token = MpesaAccessToken.validated_mpesa_access_token
+   
+    headers = {"Authorization": "Bearer %s" % access_token,
+                "Content-Type": "application/json"}
+    
+    # Generate the timestamp
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    # Generate the password
+    business_shortcode = "174379"
+    passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+    password = generate_password(business_shortcode, passkey, timestamp)
+    
+    employer_id = request.json.get('employer_id')
+    print(employer_id)
+    checkout_request_id = request.json.get('id')
+    print(checkout_request_id)
+    curl_post_data = {
+        'BusinessShortCode': business_shortcode,
+        'Password': password,
+        'Timestamp':timestamp,
+        'CheckoutRequestID': checkout_request_id
+        
+    }
+    url = 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query'
+    response = requests.post(url,json=curl_post_data, headers=headers)
+    response_data = response.json()
+    
+    if response_data.get('ResultCode') == '0':
+        payment = Payment.query.filter_by(employer_id=employer_id).first()
+        employer = Employer.query.filter_by(id=employer_id).first()
+        if payment:
+            employer.profile_verified = True
+            payment.payment_status = True
+            db.session.commit()
+    return response_data
+    
+
 
 # Add routes to the API
 api.add_resource(AdminLogin, '/admin_login')
